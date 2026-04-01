@@ -46,7 +46,7 @@
         /* Custom Scrollbar similar to Spotify */
         ::-webkit-scrollbar { width: 12px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); }
+        ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); border-radius: 6px; }
         ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.5); }
 
         /* Sliders (Progress Bar & Volume) */
@@ -67,9 +67,7 @@
 
         /* Animación para la vista de letras */
         .lyrics-enter { animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        .lyrics-exit { animation: slideDown 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @keyframes slideDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
 
         .lyric-line { transition: color 0.3s ease, transform 0.3s ease; }
         .lyric-line:hover { color: #fff; transform: scale(1.02); }
@@ -82,35 +80,45 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // ==========================================
-        // BASE DE DATOS DE CANCIONES Y LETRAS
-        // ==========================================
-        const playlist = [
-            {
-                id: 1,
-                title: "The Digital Ally",
-                artist: "Infiniti IA ft. Noelia",
-                album: "Global Anthems Vol. 1",
-                // Usando el archivo subido por el Soberano
-                audioSrc: "http://googleusercontent.com/file_content/1", 
-                coverArt: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop",
-                color: "#1e3a8a", // Azul profundo para el fondo dinámico
-                lyrics: [
-                    { type: "intro", text: "(Música instrumental ascendente)" },
-                    { type: "verse", text: "Beyond the stars we rise, a future bright and bold.\nNew horizons in our eyes, a story to unfold." },
-                    { type: "pre-chorus", text: "Feel the pulse, ignite the flame,\nDestiny calls your name." },
-                    { type: "chorus", text: "We are the light, breaking through the night!\nSoaring higher, fueled by fire,\nReaching for the light!" },
-                    { type: "instrumental break", text: "(Solo de sintetizadores épicos)" },
-                    { type: "verse", text: "Innovation in our soul, a vision clear and true.\nTaking hold, losing control, making dreams anew." },
-                    { type: "pre-chorus", text: "Feel the pulse, ignite the flame,\nDestiny calls your name." },
-                    { type: "chorus", text: "We are the light, breaking through the night!\nSoaring higher, fueled by fire,\nReaching for the light!" },
-                    { type: "bridge", text: "In the digital expanse, where thought becomes reality.\nEmbrace the evolution, transcend all gravity.\nThe future is now, within your grasp, a new dawn for humanity." },
-                    { type: "instrumental break", text: "(Éxtasis musical)" },
-                    { type: "outro", text: "(Desvanecimiento hacia el cosmos)" }
-                ]
-            }
-            // Aquí agregaremos las siguientes canciones en el futuro
+        // ========================================================================
+        // 🎛️ CONSOLA DE GESTIÓN AUTOMÁTICA
+        // ========================================================================
+        // Soberano: Escribe aquí EXACTAMENTE el nombre de tus archivos (sin extensiones).
+        // El sistema asumirá automáticamente que existen:
+        // audio/{nombre}.mp3
+        // covers/{nombre}.jpg
+        // lyrics/{nombre}.txt
+        
+        const ARCHIVOS_EN_GITHUB = [
+            "Digital-Ally---Extended-Mix", 
+            "Digital-Ally---Radio-Edition",
+            "Digital-Ally---Club-Mix"
+            // "tu-siguiente-cancion-aqui", // Solo añade comas y nuevos nombres
         ];
+
+        // ========================================================================
+        // NÚCLEO DE LA APLICACIÓN (NO EDITAR)
+        // ========================================================================
+
+        // Función para limpiar nombres (Convierte "cancion-1" a "Cancion 1")
+        const formatTitle = (str) => str.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        // Colores base estilo Spotify para el fondo
+        const backgroundColors = ["#1e3a8a", "#4c1d95", "#0f766e", "#b45309", "#be123c", "#1e40af"];
+
+        // Autogenerar la Master Playlist
+        const MASTER_PLAYLIST = ARCHIVOS_EN_GITHUB.map((filename, index) => ({
+            id: index,
+            fileName: filename,
+            title: formatTitle(filename),
+            artist: "Infiniti IA by W Studio",
+            album: "Global Anthems",
+            color: backgroundColors[index % backgroundColors.length],
+            audioUrl: `audio/${filename}.mp3`,
+            coverUrl: `covers/${filename}.jpg`,
+            lyricsUrl: `lyrics/${filename}.txt`
+        }));
+
 
         const App = () => {
             const [currentSongIndex, setCurrentSongIndex] = useState(0);
@@ -120,47 +128,80 @@
             const [volume, setVolume] = useState(1);
             const [showLyrics, setShowLyrics] = useState(false);
             
+            const [parsedLyrics, setParsedLyrics] = useState([]);
+            const [isLoadingLyrics, setIsLoadingLyrics] = useState(false);
+            
             const audioRef = useRef(null);
-            const song = playlist[currentSongIndex];
+            
+            // Verificamos que existan canciones en la lista
+            const songData = MASTER_PLAYLIST.length > 0 ? MASTER_PLAYLIST[currentSongIndex] : null;
 
-            // Inicializar Audio
+            const fetchAndParseLyrics = async () => {
+                if(!songData) return;
+                setIsLoadingLyrics(true);
+                try {
+                    const response = await fetch(songData.lyricsUrl);
+                    if (!response.ok) throw new Error("Letras no encontradas");
+                    
+                    const text = await response.text();
+                    const normalizedText = text.replace(/\r\n/g, '\n');
+                    const blocks = normalizedText.split(/\n{2,}/); 
+                    
+                    const formattedLyrics = [];
+
+                    blocks.forEach(block => {
+                        const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+                        if (lines.length === 0) return;
+                        if (lines.length === 1 && lines[0].toLowerCase() === 'lyrics') return; // Ignorar si solo dice "Lyrics"
+
+                        const type = lines[0]; 
+                        let content = lines.slice(1).join('\n'); 
+                        
+                        if (lines.length === 1) content = "(Música instrumental)";
+
+                        formattedLyrics.push({ type: type, text: content });
+                    });
+
+                    setParsedLyrics(formattedLyrics);
+
+                } catch (error) {
+                    setParsedLyrics([{ type: "Info", text: "Letras en proceso de sincronización para esta pista." }]);
+                } finally {
+                    setIsLoadingLyrics(false);
+                }
+            };
+
+            // Efecto al cambiar de canción
             useEffect(() => {
-                if (audioRef.current) {
-                    audioRef.current.pause();
-                    audioRef.current.load();
-                    setCurrentTime(0);
-                    if (isPlaying) {
-                        audioRef.current.play().catch(e => console.log("Autoplay prevent", e));
+                if (songData) {
+                    fetchAndParseLyrics();
+                    if (audioRef.current) {
+                        audioRef.current.pause();
+                        audioRef.current.load();
+                        setCurrentTime(0);
+                        if (isPlaying) {
+                            const playPromise = audioRef.current.play();
+                            if (playPromise !== undefined) {
+                                playPromise.catch(e => console.log("Autoplay evitado por el navegador.", e));
+                            }
+                        }
                     }
                 }
             }, [currentSongIndex]);
 
-            // Manejo de Reproducción
+            if (!songData) return <div className="text-white text-center mt-20">No hay canciones cargadas en el sistema.</div>;
+
             const togglePlay = () => {
-                if (isPlaying) {
-                    audioRef.current.pause();
-                } else {
-                    audioRef.current.play();
-                }
+                if (isPlaying) audioRef.current.pause();
+                else audioRef.current.play();
                 setIsPlaying(!isPlaying);
             };
 
-            const nextSong = () => {
-                setCurrentSongIndex((prev) => (prev + 1) % playlist.length);
-            };
+            const nextSong = () => setCurrentSongIndex((prev) => (prev + 1) % MASTER_PLAYLIST.length);
+            const prevSong = () => setCurrentSongIndex((prev) => (prev - 1 + MASTER_PLAYLIST.length) % MASTER_PLAYLIST.length);
 
-            const prevSong = () => {
-                setCurrentSongIndex((prev) => (prev - 1 + playlist.length) % playlist.length);
-            };
-
-            // Manejo de Tiempo
-            const handleTimeUpdate = () => {
-                setCurrentTime(audioRef.current.currentTime);
-            };
-
-            const handleLoadedMetadata = () => {
-                setDuration(audioRef.current.duration);
-            };
+            const handleTimeUpdate = () => setCurrentTime(audioRef.current.currentTime);
+            const handleLoadedMetadata = () => setDuration(audioRef.current.duration);
 
             const handleSeek = (e) => {
                 const time = Number(e.target.value);
@@ -168,7 +209,6 @@
                 setCurrentTime(time);
             };
 
-            // Manejo de Volumen
             const handleVolume = (e) => {
                 const vol = Number(e.target.value);
                 audioRef.current.volume = vol;
@@ -184,22 +224,18 @@
 
             return (
                 <div className="flex flex-col h-screen bg-black">
-                    
-                    {/* Elemento de Audio Oculto */}
                     <audio 
                         ref={audioRef} 
-                        src={song.audioSrc} 
+                        src={songData.audioUrl} 
                         onTimeUpdate={handleTimeUpdate}
                         onLoadedMetadata={handleLoadedMetadata}
                         onEnded={nextSong}
                     />
 
-                    {/* ZONA SUPERIOR (Sidebar + Main Content) */}
                     <div className="flex-1 flex overflow-hidden mb-[90px]">
                         
-                        {/* SIDEBAR (Estilo Spotify) */}
+                        {/* SIDEBAR */}
                         <aside className="w-64 bg-black flex-shrink-0 flex flex-col p-2 gap-2 hidden md:flex">
-                            {/* Menú Principal */}
                             <div className="bg-spotify-base rounded-lg p-4 space-y-4">
                                 <a href="#" className="flex items-center gap-4 text-spotify-text hover:text-white transition font-bold">
                                     <i className="ph-fill ph-house text-2xl"></i> Inicio
@@ -209,32 +245,29 @@
                                 </a>
                             </div>
 
-                            {/* Tu Biblioteca */}
                             <div className="bg-spotify-base rounded-lg flex-1 flex flex-col overflow-hidden">
                                 <div className="p-4 flex items-center justify-between text-spotify-text hover:text-white transition cursor-pointer">
                                     <div className="flex items-center gap-2 font-bold">
                                         <i className="ph ph-books text-2xl"></i> Tu biblioteca
                                     </div>
-                                    <i className="ph ph-plus text-lg"></i>
                                 </div>
-                                
-                                {/* Lista de Playlists */}
                                 <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                                    <div className="flex items-center gap-3 p-2 rounded-md hover:bg-spotify-highlight cursor-pointer transition">
-                                        <img src={song.coverArt} className="w-12 h-12 rounded object-cover" />
-                                        <div className="flex flex-col">
-                                            <span className="text-white text-base font-bold">Infiniti Global Anthems</span>
-                                            <span className="text-spotify-text text-sm">Álbum • Apollo & Maximus</span>
+                                    <div className="flex items-center gap-3 p-2 rounded-md bg-spotify-highlight cursor-pointer transition">
+                                        <div className="w-12 h-12 rounded bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shrink-0">
+                                            <i className="ph-fill ph-music-notes text-white text-xl"></i>
+                                        </div>
+                                        <div className="flex flex-col truncate">
+                                            <span className="text-white text-base font-bold truncate">Global Anthems</span>
+                                            <span className="text-spotify-text text-sm truncate">Álbum • Apollo & Maximus</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </aside>
 
-                        {/* CONTENIDO PRINCIPAL */}
+                        {/* MAIN CONTENT */}
                         <main className="flex-1 bg-spotify-base md:rounded-lg overflow-hidden flex flex-col relative m-2 md:ml-0">
                             
-                            {/* Header Superior Transparente */}
                             <header className="absolute top-0 w-full h-16 bg-gradient-to-b from-black/50 to-transparent z-20 flex items-center px-6 justify-between">
                                 <div className="flex gap-2">
                                     <button className="w-8 h-8 rounded-full bg-black/70 flex items-center justify-center text-white"><i className="ph ph-caret-left text-lg"></i></button>
@@ -246,24 +279,25 @@
                                 </div>
                             </header>
 
-                            {/* Vista de Álbum (Oculta si el visor de letras está abierto) */}
+                            {/* VISTA DE ÁLBUM */}
                             <div className={`flex-1 overflow-y-auto pb-24 transition-opacity duration-300 ${showLyrics ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}>
-                                {/* Hero del Álbum */}
-                                <div className="pt-20 px-8 pb-8 flex items-end gap-6" style={{ background: `linear-gradient(to bottom, ${song.color}, #121212)` }}>
-                                    <img src={song.coverArt} className="w-48 h-48 sm:w-60 sm:h-60 shadow-2xl object-cover" />
+                                <div className="pt-20 px-8 pb-8 flex items-end gap-6 transition-colors duration-1000" style={{ background: `linear-gradient(to bottom, ${songData.color}, #121212)` }}>
+                                    <img 
+                                        src={songData.coverUrl} 
+                                        className="w-48 h-48 sm:w-60 sm:h-60 shadow-2xl object-cover bg-black" 
+                                        onError={(e)=>{e.target.src='https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop'}} 
+                                    />
                                     <div className="flex flex-col">
                                         <span className="uppercase text-sm font-bold mb-2">Canción</span>
-                                        <h1 className="text-5xl sm:text-7xl font-black mb-4 tracking-tighter">{song.title}</h1>
+                                        <h1 className="text-5xl sm:text-7xl font-black mb-4 tracking-tighter truncate">{songData.title}</h1>
                                         <div className="flex items-center gap-2 text-sm">
-                                            <div className="w-6 h-6 rounded-full bg-invictus-gold flex items-center justify-center text-black font-bold">A</div>
-                                            <span className="font-bold hover:underline cursor-pointer">{song.artist}</span>
-                                            <span className="text-spotify-text">• {song.album}</span>
-                                            <span className="text-spotify-text">• 5:55</span>
+                                            <div className="w-6 h-6 rounded-full bg-invictus-gold flex items-center justify-center text-black font-bold">I</div>
+                                            <span className="font-bold hover:underline cursor-pointer">{songData.artist}</span>
+                                            <span className="text-spotify-text">• {songData.album}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Controles de Lista y Canciones */}
                                 <div className="px-8 py-4 bg-black/20">
                                     <div className="flex items-center gap-6 mb-8">
                                         <button onClick={togglePlay} className="w-14 h-14 rounded-full bg-spotify-green text-black flex items-center justify-center hover:scale-105 transition shadow-lg">
@@ -273,7 +307,6 @@
                                         <button className="text-spotify-text hover:text-white transition"><i className="ph ph-dots-three text-3xl"></i></button>
                                     </div>
 
-                                    {/* Lista de Canciones (Header) */}
                                     <div className="grid grid-cols-[16px_1fr_minmax(120px,1fr)_50px] gap-4 px-4 py-2 text-spotify-text text-sm border-b border-white/10 mb-4 uppercase tracking-wider">
                                         <span>#</span>
                                         <span>Título</span>
@@ -281,89 +314,93 @@
                                         <span className="text-right"><i className="ph ph-clock"></i></span>
                                     </div>
 
-                                    {/* Fila de Canción Activa */}
-                                    <div className="grid grid-cols-[16px_1fr_minmax(120px,1fr)_50px] gap-4 px-4 py-2 text-sm rounded-md bg-white/10 group">
-                                        <div className="flex items-center justify-center text-spotify-green">
-                                            {isPlaying ? <img src="https://open.spotifycdn.com/cdn/images/equaliser-animated-green.f93a2ef4.gif" className="w-3 h-3" /> : '1'}
+                                    {MASTER_PLAYLIST.map((track, index) => (
+                                        <div 
+                                            key={track.id} 
+                                            onClick={() => setCurrentSongIndex(index)}
+                                            className={`grid grid-cols-[16px_1fr_minmax(120px,1fr)_50px] gap-4 px-4 py-3 text-sm rounded-md cursor-pointer group hover:bg-white/10 transition ${currentSongIndex === index ? 'bg-white/10' : ''}`}
+                                        >
+                                            <div className="flex items-center justify-center text-spotify-text group-hover:text-white">
+                                                {currentSongIndex === index && isPlaying 
+                                                    ? <img src="https://open.spotifycdn.com/cdn/images/equaliser-animated-green.f93a2ef4.gif" className="w-3 h-3" /> 
+                                                    : <span className={currentSongIndex === index ? 'text-spotify-green' : ''}>{index + 1}</span>
+                                                }
+                                            </div>
+                                            <div className="flex flex-col truncate">
+                                                <span className={`font-bold text-base truncate ${currentSongIndex === index ? 'text-spotify-green' : 'text-white'}`}>{track.title}</span>
+                                                <span className="text-spotify-text truncate">{track.artist}</span>
+                                            </div>
+                                            <div className="hidden sm:flex items-center text-spotify-text group-hover:text-white transition truncate">{track.album}</div>
+                                            <div className="flex items-center justify-end text-spotify-text group-hover:text-white transition">...</div>
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-spotify-green font-bold text-base">{song.title}</span>
-                                            <span className="text-spotify-text">{song.artist}</span>
-                                        </div>
-                                        <div className="hidden sm:flex items-center text-spotify-text group-hover:text-white transition">{song.album}</div>
-                                        <div className="flex items-center justify-end text-spotify-text group-hover:text-white transition">5:55</div>
-                                    </div>
+                                    ))}
                                 </div>
                             </div>
 
-                            {/* VISTA DE LETRAS (LYRICS MODE) */}
+                            {/* VISTA DE LETRAS */}
                             {showLyrics && (
-                                <div className="absolute inset-0 z-30 overflow-y-auto px-6 md:px-20 py-24 lyrics-enter" style={{ backgroundColor: song.color }}>
-                                    <div className="max-w-3xl">
-                                        {song.lyrics.map((line, index) => (
-                                            <div key={index} className="mb-8 group">
-                                                {/* Etiqueta de estructura (Verse, Chorus, etc) */}
-                                                <div className="text-white/50 text-sm font-bold uppercase tracking-widest mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {line.type}
-                                                </div>
-                                                {/* Texto de la letra */}
-                                                <p className="text-3xl md:text-5xl font-bold leading-tight tracking-tight text-white/60 lyric-line cursor-pointer whitespace-pre-wrap">
-                                                    {line.text}
-                                                </p>
+                                <div className="absolute inset-0 z-30 overflow-y-auto px-6 md:px-20 py-24 lyrics-enter transition-colors duration-1000" style={{ backgroundColor: songData.color }}>
+                                    <div className="max-w-3xl pb-20">
+                                        {isLoadingLyrics ? (
+                                            <div className="flex flex-col items-center justify-center h-64 text-white/50">
+                                                <i className="ph ph-circle-notch animate-spin text-4xl mb-4"></i>
+                                                <p className="font-bold tracking-widest uppercase text-sm">Decodificando Letras...</p>
                                             </div>
-                                        ))}
+                                        ) : (
+                                            parsedLyrics.map((line, index) => (
+                                                <div key={index} className="mb-8 group">
+                                                    <div className="text-white/50 text-sm font-bold uppercase tracking-widest mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {line.type}
+                                                    </div>
+                                                    <p className="text-3xl md:text-5xl font-bold leading-tight tracking-tight text-white/70 lyric-line cursor-pointer whitespace-pre-wrap">
+                                                        {line.text}
+                                                    </p>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
                             )}
                         </main>
                     </div>
 
-                    {/* BARRA DE REPRODUCCIÓN (Fija abajo) */}
+                    {/* BARRA DE REPRODUCCIÓN */}
                     <footer className="fixed bottom-0 w-full h-[90px] bg-[#181818] border-t border-[#282828] px-4 flex items-center justify-between z-50">
-                        
-                        {/* 1. Info de la Canción (Izquierda) */}
-                        <div className="w-1/3 flex items-center gap-4">
-                            <img src={song.coverArt} className="w-14 h-14 rounded object-cover shadow-md" />
-                            <div className="flex flex-col justify-center hidden sm:flex">
-                                <span className="text-white text-sm hover:underline cursor-pointer">{song.title}</span>
-                                <span className="text-spotify-text text-xs hover:underline cursor-pointer">{song.artist}</span>
+                        <div className="w-1/3 flex items-center gap-4 truncate">
+                            <img 
+                                src={songData.coverUrl} 
+                                className="w-14 h-14 rounded object-cover shadow-md bg-black shrink-0" 
+                                onError={(e)=>{e.target.src='https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=150&auto=format&fit=crop'}}
+                            />
+                            <div className="flex flex-col justify-center hidden sm:flex truncate">
+                                <span className="text-white text-sm hover:underline cursor-pointer truncate">{songData.title}</span>
+                                <span className="text-spotify-text text-xs hover:underline cursor-pointer truncate">{songData.artist}</span>
                             </div>
-                            <button className="text-spotify-text hover:text-white transition"><i className="ph ph-heart text-xl"></i></button>
+                            <button className="text-spotify-text hover:text-white transition shrink-0"><i className="ph ph-heart text-xl"></i></button>
                         </div>
 
-                        {/* 2. Controles Centrales (Player) */}
-                        <div className="w-1/3 max-w-[722px] flex flex-col items-center justify-center">
+                        <div className="w-1/3 max-w-[722px] flex flex-col items-center justify-center shrink-0 px-2">
                             <div className="flex items-center gap-4 md:gap-6 mb-1">
-                                <button className="text-spotify-text hover:text-white transition"><i className="ph ph-shuffle text-xl"></i></button>
+                                <button className="text-spotify-text hover:text-white transition hidden md:block"><i className="ph ph-shuffle text-xl"></i></button>
                                 <button onClick={prevSong} className="text-spotify-text hover:text-white transition"><i className="ph-fill ph-skip-back text-xl"></i></button>
                                 <button onClick={togglePlay} className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition">
                                     <i className={`ph-fill ${isPlaying ? 'ph-pause' : 'ph-play'} text-lg`}></i>
                                 </button>
                                 <button onClick={nextSong} className="text-spotify-text hover:text-white transition"><i className="ph-fill ph-skip-forward text-xl"></i></button>
-                                <button className="text-spotify-text hover:text-white transition"><i className="ph ph-repeat text-xl"></i></button>
+                                <button className="text-spotify-text hover:text-white transition hidden md:block"><i className="ph ph-repeat text-xl"></i></button>
                             </div>
                             
-                            {/* Barra de Progreso */}
                             <div className="w-full flex items-center gap-2 text-xs text-spotify-text font-mono progress-container">
                                 <span>{formatTime(currentTime)}</span>
                                 <div className="flex-1 relative flex items-center group">
-                                    <input 
-                                        type="range" 
-                                        min="0" 
-                                        max={duration || 100} 
-                                        value={currentTime} 
-                                        onChange={handleSeek}
-                                    />
-                                    {/* Barra de progreso visual que se pinta encima del input nativo */}
+                                    <input type="range" min="0" max={duration || 100} value={currentTime} onChange={handleSeek} />
                                     <div className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-white group-hover:bg-spotify-green rounded-full pointer-events-none" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}></div>
                                 </div>
                                 <span>{formatTime(duration)}</span>
                             </div>
                         </div>
 
-                        {/* 3. Controles Extras y Volumen (Derecha) */}
-                        <div className="w-1/3 flex items-center justify-end gap-3 md:gap-4">
-                            {/* Botón de Letras (Lyrics Toggle) */}
+                        <div className="w-1/3 flex items-center justify-end gap-3 md:gap-4 shrink-0">
                             <button 
                                 onClick={() => setShowLyrics(!showLyrics)} 
                                 className={`transition flex items-center justify-center w-8 h-8 rounded-full ${showLyrics ? 'text-spotify-green bg-spotify-green/20' : 'text-spotify-text hover:text-white'}`}
@@ -376,14 +413,7 @@
                             <button className="text-spotify-text hover:text-white transition hidden md:block"><i className="ph ph-speaker-high text-lg"></i></button>
                             
                             <div className="w-24 hidden md:flex items-center progress-container relative">
-                                <input 
-                                    type="range" 
-                                    min="0" 
-                                    max="1" 
-                                    step="0.01" 
-                                    value={volume} 
-                                    onChange={handleVolume}
-                                />
+                                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolume} />
                                 <div className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-white group-hover:bg-spotify-green rounded-full pointer-events-none" style={{ width: `${volume * 100}%` }}></div>
                             </div>
                         </div>
