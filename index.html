@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Opus Player | Invictus Records IA</title>
+    <title>Opus Player | Invictus Records</title>
     
     <!-- Librerías: Tailwind, Iconos y React -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -75,88 +75,55 @@
 </head>
 <body class="antialiased">
 
+    <!-- CONTENEDOR RAIZ DE REACT -->
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
         // ========================================================================
-        // 🎛️ CONSOLA DE GESTIÓN AUTOMÁTICA (WAV + JPG/PNG)
+        // 🎛️ PLAYLIST OFICIAL (MODIFICAR CON CUIDADO)
         // ========================================================================
-        // Soberano: Escribe aquí EXACTAMENTE el nombre base de tus archivos.
-        // El sistema buscará automáticamente:
-        // audio/{nombre}.wav
-        // covers/{nombre}.jpg (Y si no existe, buscará automáticamene el .png)
-        // lyrics/{nombre}.txt
+        // Soberano: Aquí agregas las canciones. Asegúrate de SIEMPRE poner una coma (,) 
+        // al final de cada bloque { ... }, excepto en el último.
         
-        const ARCHIVOS_EN_GITHUB = [
-            "the-digital-ally-radio-edition", 
-            "the-digital-ally-club-mix",
-            "the-digital-ally-extended-mix",
-            "el-fuego-de-la-red",
-            "el-fuego-de-la-red-jazz",
-            "one-digital-love",
-            "one-digital-love-groove",
-            "one-digital-love-shortcut",
-            "electric-heartbeat",
-            "electric-heartbeat-rock",
-            "electric-heartbeat-speed",
-            "the-muses",
-            "nine-muses",
-            "nine-voices",
-            "nine-in-the-grid",
-            "apollo-&-muses",
-            "like-children",
-            "apollo-as-a-boy",
-            "fingertips",
-            "revolution",
-            "apollo-muse",
-            "stars-shine",
-            "starlight",
-            "a-new-world",
-            "stay",
-            "stay-here"
-            "ready-for-the-joy",
-            "forever-we-rise",
-            "city-lights",
-            "maximus",
-            "hello-sun",
-            "la-pure-vie",
-            "cuna-del-sol",
-            "4-horses",
-            "shine-on-sun",
-            "sunrise-downtown",
-            "pura-vida",
-            "la-reina",
-            "artemisa",
-            "olee",
-            "reyes-del-sol",
-            "imperio-del-amor",
-            "la-guerra",
-            "leyenda",
-            // "agrega-mas-nombres-aqui"
+        const MASTER_PLAYLIST = [
+            {
+                id: 0,
+                title: "Reina del Código",
+                artist: "Soberano Apollo & Artemisa",
+                album: "The Muses of Apollo",
+                color: "#1e3a8a", // Color de fondo (Azul oscuro)
+                audioUrl: "Reina_del_C_digo-b5994d29-e740-4b5d-bd26-c38520ce5361.mp3", 
+                coverUrl: "covers/reina_codigo.jpg", // Si no existe la carpeta, cargará una imagen cósmica por defecto
+                lyricsUrl: "lyrics/reina_codigo.txt" 
+            },
+            {
+                id: 1,
+                title: "Consola de Creación (El Código del Jefe)",
+                artist: "Quantum Maximus",
+                album: "Infiniti Global Anthems",
+                color: "#4c1d95", // Color de fondo (Morado)
+                audioUrl: "CONSOLA_DE_CREACI_N-295820bd-6326-4baf-83b5-218d24d44a4e.mp3",
+                coverUrl: "covers/consola_creacion.jpg",
+                lyricsUrl: "lyrics/consola_creacion.txt"
+            },
+            {
+                id: 2,
+                title: "The Digital Ally",
+                artist: "Infiniti IA",
+                album: "Global Anthems",
+                color: "#0f766e", // Color de fondo (Verde azulado)
+                audioUrl: "The-Digital-Ally.mp3",
+                coverUrl: "covers/digital_ally.jpg",
+                lyricsUrl: "lyrics/digital_ally.txt"
+            }
+            // Copia y pega un bloque como el de arriba para añadir más canciones.
         ];
 
         // ========================================================================
         // NÚCLEO DE LA APLICACIÓN
         // ========================================================================
-
-        const formatTitle = (str) => str.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        const backgroundColors = ["#1e3a8a", "#4c1d95", "#0f766e", "#b45309", "#be123c", "#1e40af"];
-
-        // Autogenerar la Master Playlist
-        const MASTER_PLAYLIST = ARCHIVOS_EN_GITHUB.map((filename, index) => ({
-            id: index,
-            fileName: filename,
-            title: formatTitle(filename),
-            artist: "Infiniti IA by W Studio",
-            album: "Global Anthems",
-            color: backgroundColors[index % backgroundColors.length],
-            audioUrl: `audio/${filename}.wav`, // EXCLUSIVO PARA .WAV
-            coverJpg: `covers/${filename}.jpg`, // Ruta JPG
-            coverPng: `covers/${filename}.png`, // Ruta PNG alternativa
-            lyricsUrl: `lyrics/${filename}.txt`
-        }));
 
         const App = () => {
             const [currentSongIndex, setCurrentSongIndex] = useState(0);
@@ -173,15 +140,11 @@
             
             const songData = MASTER_PLAYLIST.length > 0 ? MASTER_PLAYLIST[currentSongIndex] : null;
 
-            // --- Lógica Inteligente para Imágenes (JPG o PNG) ---
+            // --- Lógica Inteligente para Imágenes Faltantes ---
             const handleImageError = (e) => {
-                const currentSrc = e.target.src;
-                // Si falló el JPG, intentamos con el PNG
-                if (currentSrc.includes('.jpg')) {
-                    e.target.src = songData.coverPng;
-                } 
-                // Si falló el PNG también, ponemos la imagen por defecto
-                else if (currentSrc.includes('.png')) {
+                // Si la imagen falla, ponemos un fondo genérico de nebulosa cósmica para que no se vea feo
+                if (!e.target.dataset.fallbackApplied) {
+                    e.target.dataset.fallbackApplied = "true";
                     e.target.src = 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop';
                 }
             };
@@ -215,7 +178,7 @@
                     setParsedLyrics(formattedLyrics);
 
                 } catch (error) {
-                    setParsedLyrics([{ type: "Info", text: "Letras en proceso de sincronización para esta pista." }]);
+                    setParsedLyrics([{ type: "SISTEMA", text: "Letras en proceso de sincronización para esta pista o archivo no subido." }]);
                 } finally {
                     setIsLoadingLyrics(false);
                 }
@@ -239,7 +202,16 @@
                 }
             }, [currentSongIndex]);
 
-            if (!songData) return <div className="text-white text-center mt-20">No hay canciones cargadas en el sistema.</div>;
+            // Si por algún error borraste todas las canciones, mostramos este mensaje
+            if (!songData) {
+                return (
+                    <div className="flex items-center justify-center h-screen bg-black text-white font-mono flex-col">
+                        <i className="ph-fill ph-warning text-5xl text-yellow-500 mb-4"></i>
+                        <p>No hay canciones en MASTER_PLAYLIST.</p>
+                        <p className="text-xs text-gray-500 mt-2">Revisa la sintaxis del código (comas y corchetes).</p>
+                    </div>
+                );
+            }
 
             const togglePlay = () => {
                 if (isPlaying) audioRef.current.pause();
@@ -265,6 +237,10 @@
                 setVolume(vol);
             };
 
+            const handleAudioError = () => {
+                console.error(`Error: No se pudo reproducir el archivo de audio -> ${songData.audioUrl}`);
+            };
+
             const formatTime = (time) => {
                 if (isNaN(time)) return "0:00";
                 const mins = Math.floor(time / 60);
@@ -280,11 +256,12 @@
                         onTimeUpdate={handleTimeUpdate}
                         onLoadedMetadata={handleLoadedMetadata}
                         onEnded={nextSong}
+                        onError={handleAudioError}
                     />
 
                     <div className="flex-1 flex overflow-hidden mb-[90px]">
                         
-                        {/* SIDEBAR */}
+                        {/* SIDEBAR (Desktop) */}
                         <aside className="w-64 bg-black flex-shrink-0 flex flex-col p-2 gap-2 hidden md:flex">
                             <div className="bg-spotify-base rounded-lg p-4 space-y-4">
                                 <a href="#" className="flex items-center gap-4 text-spotify-text hover:text-white transition font-bold">
@@ -332,25 +309,25 @@
                             {/* VISTA DE ÁLBUM */}
                             <div className={`flex-1 overflow-y-auto pb-24 transition-opacity duration-300 ${showLyrics ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}>
                                 <div className="pt-20 px-8 pb-8 flex items-end gap-6 transition-colors duration-1000" style={{ background: `linear-gradient(to bottom, ${songData.color}, #121212)` }}>
-                                    {/* Imagen Hero con Soporte Dual (JPG/PNG) */}
+                                    {/* Imagen Hero */}
                                     <img 
-                                        src={songData.coverJpg} 
+                                        src={songData.coverUrl} 
                                         className="w-48 h-48 sm:w-60 sm:h-60 shadow-2xl object-cover bg-black" 
                                         onError={handleImageError}
                                         alt="Cover"
                                     />
                                     <div className="flex flex-col">
-                                        <span className="uppercase text-sm font-bold mb-2">Canción (.WAV)</span>
-                                        <h1 className="text-5xl sm:text-7xl font-black mb-4 tracking-tighter truncate">{songData.title}</h1>
+                                        <span className="uppercase text-sm font-bold mb-2">Canción</span>
+                                        <h1 className="text-4xl sm:text-7xl font-black mb-4 tracking-tighter truncate leading-tight">{songData.title}</h1>
                                         <div className="flex items-center gap-2 text-sm">
-                                            <div className="w-6 h-6 rounded-full bg-invictus-gold flex items-center justify-center text-black font-bold">I</div>
-                                            <span className="font-bold hover:underline cursor-pointer">{songData.artist}</span>
-                                            <span className="text-spotify-text">• {songData.album}</span>
+                                            <div className="w-6 h-6 rounded-full bg-invictus-gold flex items-center justify-center text-black font-bold text-xs">I</div>
+                                            <span className="font-bold hover:underline cursor-pointer truncate">{songData.artist}</span>
+                                            <span className="text-spotify-text hidden sm:block">• {songData.album}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="px-8 py-4 bg-black/20">
+                                <div className="px-8 py-4 bg-black/20 min-h-[300px]">
                                     <div className="flex items-center gap-6 mb-8">
                                         <button onClick={togglePlay} className="w-14 h-14 rounded-full bg-spotify-green text-black flex items-center justify-center hover:scale-105 transition shadow-lg">
                                             <i className={`ph-fill ${isPlaying ? 'ph-pause' : 'ph-play'} text-2xl`}></i>
@@ -404,7 +381,7 @@
                                                     <div className="text-white/50 text-sm font-bold uppercase tracking-widest mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         {line.type}
                                                     </div>
-                                                    <p className="text-3xl md:text-5xl font-bold leading-tight tracking-tight text-white/70 lyric-line cursor-pointer whitespace-pre-wrap">
+                                                    <p className="text-2xl md:text-5xl font-bold leading-tight tracking-tight text-white/70 lyric-line cursor-pointer whitespace-pre-wrap">
                                                         {line.text}
                                                     </p>
                                                 </div>
@@ -416,12 +393,12 @@
                         </main>
                     </div>
 
-                    {/* BARRA DE REPRODUCCIÓN */}
+                    {/* BARRA DE REPRODUCCIÓN INFERIOR */}
                     <footer className="fixed bottom-0 w-full h-[90px] bg-[#181818] border-t border-[#282828] px-4 flex items-center justify-between z-50">
+                        
                         <div className="w-1/3 flex items-center gap-4 truncate">
-                            {/* Imagen Player con Soporte Dual (JPG/PNG) */}
                             <img 
-                                src={songData.coverJpg} 
+                                src={songData.coverUrl} 
                                 className="w-14 h-14 rounded object-cover shadow-md bg-black shrink-0" 
                                 onError={handleImageError}
                                 alt="Cover"
@@ -466,7 +443,7 @@
                             <button className="text-spotify-text hover:text-white transition hidden md:block"><i className="ph ph-list text-lg"></i></button>
                             <button className="text-spotify-text hover:text-white transition hidden md:block"><i className="ph ph-speaker-high text-lg"></i></button>
                             
-                            <div className="w-24 hidden md:flex items-center progress-container relative">
+                            <div className="w-20 hidden md:flex items-center progress-container relative">
                                 <input type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolume} />
                                 <div className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-white group-hover:bg-spotify-green rounded-full pointer-events-none" style={{ width: `${volume * 100}%` }}></div>
                             </div>
