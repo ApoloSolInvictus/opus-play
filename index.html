@@ -43,13 +43,11 @@
     <style>
         body { background-color: #000; color: #fff; overflow: hidden; user-select: none; }
         
-        /* Custom Scrollbar similar to Spotify */
         ::-webkit-scrollbar { width: 12px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); border-radius: 6px; }
         ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.5); }
 
-        /* Sliders (Progress Bar & Volume) */
         input[type=range] {
             -webkit-appearance: none; width: 100%; background: transparent; height: 4px; border-radius: 2px; cursor: pointer;
         }
@@ -65,7 +63,6 @@
         .progress-container:hover input[type=range]::-webkit-slider-thumb { opacity: 1; }
         .progress-container:hover input[type=range]::-webkit-slider-runnable-track { background: #1DB954; }
 
-        /* Animación para la vista de letras */
         .lyrics-enter { animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
@@ -75,50 +72,78 @@
 </head>
 <body class="antialiased">
 
-    <!-- CONTENEDOR RAIZ DE REACT -->
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
         // ========================================================================
-        // 🎛️ PLAYLIST OFICIAL (MODIFICAR CON CUIDADO)
+        // 🎛️ PLAYLIST SIMPLIFICADA (MP3 y WAV)
         // ========================================================================
-        // Soberano: Aquí agregas las canciones. Asegúrate de SIEMPRE poner una coma (,) 
-        // al final de cada bloque { ... }, excepto en el último.
+        // SOBERANO: Copia y pega estos bloques. Solo asegúrate de poner la extensión
+        // correcta (.mp3 o .wav) al final del nombre del archivo en "audioUrl".
         
         const MASTER_PLAYLIST = [
             {
                 id: 0,
-                title: "Reina del Código",
-                artist: "Soberano Apollo & Artemisa",
-                album: "The Muses of Apollo",
-                color: "#1e3a8a", // Color de fondo (Azul oscuro)
-                audioUrl: "Reina_del_C_digo-b5994d29-e740-4b5d-bd26-c38520ce5361.mp3", 
-                coverUrl: "covers/reina_codigo.jpg", // Si no existe la carpeta, cargará una imagen cósmica por defecto
-                lyricsUrl: "lyrics/reina_codigo.txt" 
+                title: "Digital Ally - Radio Edition",
+                artist: "Quantum Maximus",
+                album: "Global Anthems",
+                color: "#4c1d95", 
+                audioUrl: "the-digital-ally-radio-edition.wav", // <-- EJEMPLO MP3
+                coverUrl: "covers/the-digital-ally-radio-edition.jpg",
+                lyricsUrl: "lyrics/the-digital-ally-radio-edition.txt"
             },
             {
                 id: 1,
-                title: "Consola de Creación (El Código del Jefe)",
+                title: "Reina del Código",
+                artist: "Apollo & Artemisa",
+                album: "The Muses of Apollo",
+                color: "#1e3a8a", 
+                audioUrl: "reina-del-codigo.wav", // <-- EJEMPLO WAV
+                coverUrl: "covers/reina_codigo.jpg", 
+                lyricsUrl: "lyrics/reina_codigo.txt" 
+            },
+            {
+                id: 2,
+                title: "Frecuencia 5D",
+                artist: "Luna Invictus",
+                album: "Healing Sounds",
+                color: "#0f766e", 
+                audioUrl: "frecuencia-5d.mp3", // <-- EJEMPLO MP3
+                coverUrl: "covers/frecuencia.jpg",
+                lyricsUrl: "lyrics/frecuencia.txt"
+            }
+            {
+                id: 3,
+                title: "Código del Jefe",
                 artist: "Quantum Maximus",
-                album: "Infiniti Global Anthems",
-                color: "#4c1d95", // Color de fondo (Morado)
-                audioUrl: "CONSOLA_DE_CREACI_N-295820bd-6326-4baf-83b5-218d24d44a4e.mp3",
+                album: "Global Anthems",
+                color: "#4c1d95", 
+                audioUrl: "codigo-del-jefe.mp3", // <-- EJEMPLO MP3
                 coverUrl: "covers/consola_creacion.jpg",
                 lyricsUrl: "lyrics/consola_creacion.txt"
             },
             {
-                id: 2,
-                title: "The Digital Ally",
-                artist: "Infiniti IA",
-                album: "Global Anthems",
-                color: "#0f766e", // Color de fondo (Verde azulado)
-                audioUrl: "The-Digital-Ally.mp3",
-                coverUrl: "covers/digital_ally.jpg",
-                lyricsUrl: "lyrics/digital_ally.txt"
+                id: 4,
+                title: "Reina del Código",
+                artist: "Apollo & Artemisa",
+                album: "The Muses of Apollo",
+                color: "#1e3a8a", 
+                audioUrl: "reina-del-codigo.wav", // <-- EJEMPLO WAV
+                coverUrl: "covers/reina_codigo.jpg", 
+                lyricsUrl: "lyrics/reina_codigo.txt" 
+            },
+            {
+                id: 5,
+                title: "Frecuencia 5D",
+                artist: "Luna Invictus",
+                album: "Healing Sounds",
+                color: "#0f766e", 
+                audioUrl: "frecuencia-5d.mp3", // <-- EJEMPLO MP3
+                coverUrl: "covers/frecuencia.jpg",
+                lyricsUrl: "lyrics/frecuencia.txt"
             }
-            // Copia y pega un bloque como el de arriba para añadir más canciones.
         ];
 
         // ========================================================================
@@ -132,6 +157,7 @@
             const [duration, setDuration] = useState(0);
             const [volume, setVolume] = useState(1);
             const [showLyrics, setShowLyrics] = useState(false);
+            const [audioError, setAudioError] = useState(false); // Estado para capturar errores de audio
             
             const [parsedLyrics, setParsedLyrics] = useState([]);
             const [isLoadingLyrics, setIsLoadingLyrics] = useState(false);
@@ -140,15 +166,15 @@
             
             const songData = MASTER_PLAYLIST.length > 0 ? MASTER_PLAYLIST[currentSongIndex] : null;
 
-            // --- Lógica Inteligente para Imágenes Faltantes ---
+            // Manejo de imágenes de portada
             const handleImageError = (e) => {
-                // Si la imagen falla, ponemos un fondo genérico de nebulosa cósmica para que no se vea feo
                 if (!e.target.dataset.fallbackApplied) {
                     e.target.dataset.fallbackApplied = "true";
                     e.target.src = 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop';
                 }
             };
 
+            // Carga de Letras
             const fetchAndParseLyrics = async () => {
                 if(!songData) return;
                 setIsLoadingLyrics(true);
@@ -178,7 +204,7 @@
                     setParsedLyrics(formattedLyrics);
 
                 } catch (error) {
-                    setParsedLyrics([{ type: "SISTEMA", text: "Letras en proceso de sincronización para esta pista o archivo no subido." }]);
+                    setParsedLyrics([{ type: "SISTEMA", text: "Letras no encontradas. Disfruta la frecuencia." }]);
                 } finally {
                     setIsLoadingLyrics(false);
                 }
@@ -187,6 +213,7 @@
             // Efecto al cambiar de canción
             useEffect(() => {
                 if (songData) {
+                    setAudioError(false); // Resetear error al cambiar de canción
                     fetchAndParseLyrics();
                     if (audioRef.current) {
                         audioRef.current.pause();
@@ -195,28 +222,40 @@
                         if (isPlaying) {
                             const playPromise = audioRef.current.play();
                             if (playPromise !== undefined) {
-                                playPromise.catch(e => console.log("Autoplay evitado por el navegador.", e));
+                                playPromise.catch(e => {
+                                    console.log("Autoplay evitado.", e);
+                                    setIsPlaying(false);
+                                });
                             }
                         }
                     }
                 }
             }, [currentSongIndex]);
 
-            // Si por algún error borraste todas las canciones, mostramos este mensaje
+            // Validación de Lista Vacía
             if (!songData) {
                 return (
                     <div className="flex items-center justify-center h-screen bg-black text-white font-mono flex-col">
                         <i className="ph-fill ph-warning text-5xl text-yellow-500 mb-4"></i>
                         <p>No hay canciones en MASTER_PLAYLIST.</p>
-                        <p className="text-xs text-gray-500 mt-2">Revisa la sintaxis del código (comas y corchetes).</p>
                     </div>
                 );
             }
 
             const togglePlay = () => {
-                if (isPlaying) audioRef.current.pause();
-                else audioRef.current.play();
-                setIsPlaying(!isPlaying);
+                if (audioError) return; // No intentar reproducir si hay error
+                if (isPlaying) {
+                    audioRef.current.pause();
+                    setIsPlaying(false);
+                } else {
+                    audioRef.current.play().then(() => {
+                        setIsPlaying(true);
+                    }).catch(err => {
+                        console.error("Error al reproducir:", err);
+                        setAudioError(true);
+                        setIsPlaying(false);
+                    });
+                }
             };
 
             const nextSong = () => setCurrentSongIndex((prev) => (prev + 1) % MASTER_PLAYLIST.length);
@@ -238,7 +277,9 @@
             };
 
             const handleAudioError = () => {
-                console.error(`Error: No se pudo reproducir el archivo de audio -> ${songData.audioUrl}`);
+                console.error(`Error: Archivo no encontrado -> ${songData.audioUrl}`);
+                setAudioError(true);
+                setIsPlaying(false);
             };
 
             const formatTime = (time) => {
@@ -250,6 +291,7 @@
 
             return (
                 <div className="flex flex-col h-screen bg-black">
+                    {/* MOTOR DE AUDIO NATIVO (Soporta MP3 y WAV) */}
                     <audio 
                         ref={audioRef} 
                         src={songData.audioUrl} 
@@ -309,7 +351,6 @@
                             {/* VISTA DE ÁLBUM */}
                             <div className={`flex-1 overflow-y-auto pb-24 transition-opacity duration-300 ${showLyrics ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}>
                                 <div className="pt-20 px-8 pb-8 flex items-end gap-6 transition-colors duration-1000" style={{ background: `linear-gradient(to bottom, ${songData.color}, #121212)` }}>
-                                    {/* Imagen Hero */}
                                     <img 
                                         src={songData.coverUrl} 
                                         className="w-48 h-48 sm:w-60 sm:h-60 shadow-2xl object-cover bg-black" 
@@ -328,8 +369,20 @@
                                 </div>
 
                                 <div className="px-8 py-4 bg-black/20 min-h-[300px]">
+                                    
+                                    {/* ALERTA DE ERROR SI EL ARCHIVO NO EXISTE */}
+                                    {audioError && (
+                                        <div className="mb-6 p-4 bg-red-900/40 border border-red-500/50 rounded-lg flex items-center gap-4 text-white">
+                                            <i className="ph-fill ph-warning-circle text-3xl text-red-500"></i>
+                                            <div>
+                                                <h4 className="font-bold">Error de Frecuencia Cuántica</h4>
+                                                <p className="text-sm text-gray-300">No se encontró el archivo: <strong>{songData.audioUrl}</strong>. Revisa que esté subido a tu servidor GitHub en la misma carpeta.</p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center gap-6 mb-8">
-                                        <button onClick={togglePlay} className="w-14 h-14 rounded-full bg-spotify-green text-black flex items-center justify-center hover:scale-105 transition shadow-lg">
+                                        <button onClick={togglePlay} className={`w-14 h-14 rounded-full flex items-center justify-center hover:scale-105 transition shadow-lg ${audioError ? 'bg-gray-600 cursor-not-allowed' : 'bg-spotify-green text-black'}`}>
                                             <i className={`ph-fill ${isPlaying ? 'ph-pause' : 'ph-play'} text-2xl`}></i>
                                         </button>
                                         <button className="text-spotify-text hover:text-white transition"><i className="ph ph-heart text-3xl"></i></button>
@@ -358,6 +411,7 @@
                                             <div className="flex flex-col truncate">
                                                 <span className={`font-bold text-base truncate ${currentSongIndex === index ? 'text-spotify-green' : 'text-white'}`}>{track.title}</span>
                                                 <span className="text-spotify-text truncate">{track.artist}</span>
+                                                <span className="text-xs text-gray-600 mt-0.5 truncate">{track.audioUrl}</span>
                                             </div>
                                             <div className="hidden sm:flex items-center text-spotify-text group-hover:text-white transition truncate">{track.album}</div>
                                             <div className="flex items-center justify-end text-spotify-text group-hover:text-white transition">...</div>
@@ -424,7 +478,7 @@
                             <div className="w-full flex items-center gap-2 text-xs text-spotify-text font-mono progress-container">
                                 <span>{formatTime(currentTime)}</span>
                                 <div className="flex-1 relative flex items-center group">
-                                    <input type="range" min="0" max={duration || 100} value={currentTime} onChange={handleSeek} />
+                                    <input type="range" min="0" max={duration || 100} value={currentTime} onChange={handleSeek} disabled={audioError} />
                                     <div className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-white group-hover:bg-spotify-green rounded-full pointer-events-none" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}></div>
                                 </div>
                                 <span>{formatTime(duration)}</span>
