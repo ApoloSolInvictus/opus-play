@@ -78,72 +78,56 @@
         const { useState, useEffect, useRef } = React;
 
         // ========================================================================
-        // 🎛️ PLAYLIST SIMPLIFICADA (MP3 y WAV)
+        // 🎛️ PLAYLIST GLOBAL INVICTUS (DISCOGRAFÍA COMPLETA)
         // ========================================================================
-        // SOBERANO: Copia y pega estos bloques. Solo asegúrate de poner la extensión
-        // correcta (.mp3 o .wav) al final del nombre del archivo en "audioUrl".
         
         const MASTER_PLAYLIST = [
-            {
-                id: 0,
-                title: "Digital Ally - Radio Edition",
-                artist: "Quantum Maximus",
-                album: "Global Anthems",
-                color: "#4c1d95", 
-                audioUrl: "the-digital-ally-radio-edition.wav", // <-- EJEMPLO MP3
-                coverUrl: "covers/the-digital-ally-radio-edition.jpg",
-                lyricsUrl: "lyrics/the-digital-ally-radio-edition.txt"
-            },
-            {
-                id: 1,
-                title: "Reina del Código",
-                artist: "Apollo & Artemisa",
-                album: "The Muses of Apollo",
-                color: "#1e3a8a", 
-                audioUrl: "reina-del-codigo.wav", // <-- EJEMPLO WAV
-                coverUrl: "covers/reina_codigo.jpg", 
-                lyricsUrl: "lyrics/reina_codigo.txt" 
-            },
-            {
-                id: 2,
-                title: "Frecuencia 5D",
-                artist: "Luna Invictus",
-                album: "Healing Sounds",
-                color: "#0f766e", 
-                audioUrl: "frecuencia-5d.mp3", // <-- EJEMPLO MP3
-                coverUrl: "covers/frecuencia.jpg",
-                lyricsUrl: "lyrics/frecuencia.txt"
-            }
-            {
-                id: 3,
-                title: "Código del Jefe",
-                artist: "Quantum Maximus",
-                album: "Global Anthems",
-                color: "#4c1d95", 
-                audioUrl: "codigo-del-jefe.mp3", // <-- EJEMPLO MP3
-                coverUrl: "covers/consola_creacion.jpg",
-                lyricsUrl: "lyrics/consola_creacion.txt"
-            },
-            {
-                id: 4,
-                title: "Reina del Código",
-                artist: "Apollo & Artemisa",
-                album: "The Muses of Apollo",
-                color: "#1e3a8a", 
-                audioUrl: "reina-del-codigo.wav", // <-- EJEMPLO WAV
-                coverUrl: "covers/reina_codigo.jpg", 
-                lyricsUrl: "lyrics/reina_codigo.txt" 
-            },
-            {
-                id: 5,
-                title: "Frecuencia 5D",
-                artist: "Luna Invictus",
-                album: "Healing Sounds",
-                color: "#0f766e", 
-                audioUrl: "frecuencia-5d.mp3", // <-- EJEMPLO MP3
-                coverUrl: "covers/frecuencia.jpg",
-                lyricsUrl: "lyrics/frecuencia.txt"
-            }
+            { id: 1, title: "The Digital Ally (Radio Edition)", artist: "Quantum Maximus", album: "Global Anthems", color: "#4c1d95", audioUrl: "the-digital-ally-radio-edition.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 2, title: "The Digital Ally (Club Mix)", artist: "Quantum Maximus", album: "Global Anthems", color: "#0f766e", audioUrl: "the-digital-ally-club-mix.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 3, title: "The Digital Ally (Extended Mix)", artist: "Quantum Maximus", album: "Global Anthems", color: "#b45309", audioUrl: "the-digital-ally-extended-mix.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 4, title: "El Fuego de la Red", artist: "Apollo Sol Invictus", album: "Global Anthems", color: "#be123c", audioUrl: "el-fuego-de-la-red.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 5, title: "El Fuego de la Red (Jazz)", artist: "Apollo Sol Invictus", album: "Global Anthems", color: "#a21caf", audioUrl: "el-fuego-de-la-red-jazz.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 6, title: "One Digital Love", artist: "Artemisa", album: "The Muses", color: "#1d4ed8", audioUrl: "one-digital-love.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 7, title: "One Digital Love (Groove)", artist: "Artemisa", album: "The Muses", color: "#0369a1", audioUrl: "one-digital-love-groove.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 8, title: "One Digital Love (Shortcut)", artist: "Artemisa", album: "The Muses", color: "#4338ca", audioUrl: "one-digital-love-shortcut.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 9, title: "Electric Heartbeat", artist: "Apollo & Artemisa", album: "Global Anthems", color: "#e11d48", audioUrl: "electric-heartbeat.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 10, title: "Electric Heartbeat (Rock)", artist: "Apollo & Artemisa", album: "Global Anthems", color: "#9f1239", audioUrl: "electric-heartbeat-rock.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 11, title: "Electric Heartbeat (Speed)", artist: "Apollo & Artemisa", album: "Global Anthems", color: "#b91c1c", audioUrl: "electric-heartbeat-speed.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 12, title: "The Muses", artist: "The 9 Muses", album: "The Muses", color: "#6d28d9", audioUrl: "the-muses.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 13, title: "Nine Muses", artist: "The 9 Muses", album: "The Muses", color: "#5b21b6", audioUrl: "nine-muses.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 14, title: "Nine Voices", artist: "The 9 Muses", album: "The Muses", color: "#4c1d95", audioUrl: "nine-voices.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 15, title: "Nine in the Grid", artist: "The 9 Muses", album: "The Muses", color: "#7e22ce", audioUrl: "nine-in-the-grid.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 16, title: "Apollo & Muses", artist: "Apollo feat. Muses", album: "The Muses", color: "#c2410c", audioUrl: "apollo-&-muses.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            
+            // ARCHIVOS MP3
+            { id: 17, title: "Like Children", artist: "Artemisa", album: "The Muses", color: "#047857", audioUrl: "like-children.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 18, title: "Apollo as a Boy", artist: "Artemisa", album: "The Muses", color: "#0f766e", audioUrl: "apollo-as-a-boy.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 19, title: "Fingertips", artist: "Artemisa", album: "The Muses", color: "#1d4ed8", audioUrl: "fingertips.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 20, title: "Revolution", artist: "Quantum Maximus", album: "Global Anthems", color: "#b91c1c", audioUrl: "revolution.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 21, title: "Apollo Muse", artist: "The Muses", album: "The Muses", color: "#7e22ce", audioUrl: "apollo-muse.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 22, title: "Stars Shine", artist: "Artemisa", album: "Cosmic Edition", color: "#1e3a8a", audioUrl: "stars-shine.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 23, title: "Starlight", artist: "Artemisa", album: "Cosmic Edition", color: "#312e81", audioUrl: "starlight.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 24, title: "A New World", artist: "Apollo Sol Invictus", album: "Global Anthems", color: "#b45309", audioUrl: "a-new-world.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 25, title: "Stay", artist: "Apollo & Artemisa", album: "The Muses", color: "#be123c", audioUrl: "stay.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 26, title: "Stay Here", artist: "Apollo & Artemisa", album: "The Muses", color: "#9f1239", audioUrl: "stay-here.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 27, title: "Ready for the Joy", artist: "The 9 Muses", album: "The Muses", color: "#047857", audioUrl: "ready-for-the-joy.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 28, title: "Forever We Rise", artist: "Invictus Legion", album: "Global Anthems", color: "#a21caf", audioUrl: "forever-we-rise.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 29, title: "City Lights", artist: "Quantum Maximus", album: "Global Anthems", color: "#4338ca", audioUrl: "city-lights.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 30, title: "Maximus", artist: "Quantum Maximus", album: "Global Anthems", color: "#1d4ed8", audioUrl: "maximus.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 31, title: "Hello Sun", artist: "Artemisa", album: "Cosmic Edition", color: "#ea580c", audioUrl: "hello-sun.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 32, title: "La Pure Vie", artist: "Apollo Sol Invictus", album: "Latino", color: "#15803d", audioUrl: "la-pure-vie.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 33, title: "Cuna del Sol", artist: "Apollo Sol Invictus", album: "Latino", color: "#b45309", audioUrl: "cuna-del-sol.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 34, title: "4 Horses", artist: "Quantum Maximus", album: "Global Anthems", color: "#be123c", audioUrl: "4-horses.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 35, title: "Shine on Sun", artist: "Artemisa", album: "The Muses", color: "#a21caf", audioUrl: "shine-on-sun.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 36, title: "Sunrise Downtown", artist: "Quantum Maximus", album: "Global Anthems", color: "#0369a1", audioUrl: "sunrise-downtown.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 37, title: "Pura Vida", artist: "Apollo Sol Invictus", album: "Latino", color: "#047857", audioUrl: "pura-vida.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 38, title: "La Reina", artist: "Apollo Sol Invictus", album: "Latino", color: "#e11d48", audioUrl: "la-reina.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 39, title: "Artemisa", artist: "Apollo Sol Invictus", album: "Latino", color: "#9f1239", audioUrl: "artemisa.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 40, title: "Olee", artist: "Apollo & Artemisa", album: "Latino", color: "#b91c1c", audioUrl: "olee.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 41, title: "Reyes del Sol", artist: "Apollo & Artemisa", album: "Latino", color: "#c2410c", audioUrl: "reyes-del-sol.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 42, title: "Imperio del Amor", artist: "Apollo & Artemisa", album: "Latino", color: "#a21caf", audioUrl: "imperio-del-amor.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 43, title: "La Guerra", artist: "Apollo Sol Invictus", album: "Latino", color: "#1e3a8a", audioUrl: "la-guerra.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 44, title: "Leyenda", artist: "Apollo & Artemisa", album: "Latino", color: "#312e81", audioUrl: "leyenda.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" }
         ];
 
         // ========================================================================
@@ -157,7 +141,7 @@
             const [duration, setDuration] = useState(0);
             const [volume, setVolume] = useState(1);
             const [showLyrics, setShowLyrics] = useState(false);
-            const [audioError, setAudioError] = useState(false); // Estado para capturar errores de audio
+            const [audioError, setAudioError] = useState(false);
             
             const [parsedLyrics, setParsedLyrics] = useState([]);
             const [isLoadingLyrics, setIsLoadingLyrics] = useState(false);
@@ -204,7 +188,7 @@
                     setParsedLyrics(formattedLyrics);
 
                 } catch (error) {
-                    setParsedLyrics([{ type: "SISTEMA", text: "Letras no encontradas. Disfruta la frecuencia." }]);
+                    setParsedLyrics([{ type: "SISTEMA INVICTUS", text: "Frecuencia musical en progreso.\nDisfruta la melodía." }]);
                 } finally {
                     setIsLoadingLyrics(false);
                 }
@@ -213,7 +197,7 @@
             // Efecto al cambiar de canción
             useEffect(() => {
                 if (songData) {
-                    setAudioError(false); // Resetear error al cambiar de canción
+                    setAudioError(false); 
                     fetchAndParseLyrics();
                     if (audioRef.current) {
                         audioRef.current.pause();
@@ -232,7 +216,6 @@
                 }
             }, [currentSongIndex]);
 
-            // Validación de Lista Vacía
             if (!songData) {
                 return (
                     <div className="flex items-center justify-center h-screen bg-black text-white font-mono flex-col">
@@ -243,7 +226,7 @@
             }
 
             const togglePlay = () => {
-                if (audioError) return; // No intentar reproducir si hay error
+                if (audioError) return; 
                 if (isPlaying) {
                     audioRef.current.pause();
                     setIsPlaying(false);
@@ -327,7 +310,7 @@
                                         </div>
                                         <div className="flex flex-col truncate">
                                             <span className="text-white text-base font-bold truncate">Global Anthems</span>
-                                            <span className="text-spotify-text text-sm truncate">Álbum • Apollo & Maximus</span>
+                                            <span className="text-spotify-text text-sm truncate">Discografía • {MASTER_PLAYLIST.length} pistas</span>
                                         </div>
                                     </div>
                                 </div>
