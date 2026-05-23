@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Opus Player | Invictus Records</title>
-    
-    <!-- Librerías: Tailwind, Iconos y React -->
+    <title>aiPod | Invictus Records</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
@@ -23,475 +23,993 @@
                     colors: {
                         spotify: {
                             base: '#121212',
-                            elevated: '#181818',
-                            highlight: '#282828',
-                            press: '#3E3E3E',
-                            green: '#1DB954',
+                            panel: '#181818',
+                            elevated: '#1f1f1f',
+                            highlight: '#2a2a2a',
+                            press: '#3a3a3a',
+                            green: '#1db954',
                             text: '#b3b3b3',
-                            white: '#ffffff'
+                            muted: '#737373'
                         },
                         invictus: {
-                            gold: '#fbbf24',
-                            cyan: '#00f0ff'
+                            gold: '#f4b942',
+                            cyan: '#3ddbd9',
+                            rose: '#ff5c8a'
                         }
                     }
                 }
             }
-        }
+        };
     </script>
 
     <style>
-        body { background-color: #000; color: #fff; overflow: hidden; user-select: none; }
-        
-        ::-webkit-scrollbar { width: 12px; }
+        * { box-sizing: border-box; letter-spacing: 0; }
+        html, body, #root { height: 100%; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            user-select: none;
+        }
+
+        button, input { font: inherit; }
+        button { -webkit-tap-highlight-color: transparent; }
+
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); border-radius: 6px; }
-        ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.5); }
-
-        input[type=range] {
-            -webkit-appearance: none; width: 100%; background: transparent; height: 4px; border-radius: 2px; cursor: pointer;
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.22);
+            border: 3px solid transparent;
+            border-radius: 999px;
+            background-clip: content-box;
         }
-        input[type=range]:focus { outline: none; }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px; border-radius: 2px; background: #535353;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            height: 12px; width: 12px; border-radius: 50%; background: #fff;
-            -webkit-appearance: none; margin-top: -4px; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            opacity: 0; transition: opacity 0.2s;
-        }
-        .progress-container:hover input[type=range]::-webkit-slider-thumb { opacity: 1; }
-        .progress-container:hover input[type=range]::-webkit-slider-runnable-track { background: #1DB954; }
+        ::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,0.36); }
 
-        .lyrics-enter { animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .app-shell {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr) 340px;
+            grid-template-rows: minmax(0, 1fr) 96px;
+            gap: 8px;
+            height: 100vh;
+            padding: 8px;
+            background: #000;
+        }
 
-        .lyric-line { transition: color 0.3s ease, transform 0.3s ease; }
-        .lyric-line:hover { color: #fff; transform: scale(1.02); }
+        .sidebar,
+        .content-shell,
+        .detail-rail,
+        .player-bar {
+            border-radius: 8px;
+            background: #121212;
+        }
+
+        .sidebar,
+        .content-shell,
+        .detail-rail {
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .content-shell {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-scroll {
+            min-height: 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .detail-rail {
+            display: flex;
+            flex-direction: column;
+            background: #181818;
+        }
+
+        .player-bar {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(360px, 1.15fr) minmax(220px, 0.8fr);
+            align-items: center;
+            gap: 20px;
+            padding: 12px 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: #181818;
+        }
+
+        .hero-band {
+            background:
+                linear-gradient(180deg, rgba(0,0,0,0.18), #121212 92%),
+                linear-gradient(135deg, var(--hero-color), #181818 70%);
+        }
+
+        .collection-title {
+            font-size: 64px;
+            line-height: 0.98;
+            overflow-wrap: anywhere;
+        }
+
+        .track-grid {
+            display: grid;
+            grid-template-columns: 44px minmax(0, 2.1fr) minmax(120px, 1fr) minmax(110px, 0.8fr) 72px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .range {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 999px;
+            background: linear-gradient(to right, #fff var(--value, 0%), #535353 var(--value, 0%));
+            cursor: pointer;
+        }
+        .range:hover { background: linear-gradient(to right, #1db954 var(--value, 0%), #535353 var(--value, 0%)); }
+        .range:focus { outline: none; }
+        .range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+            opacity: 0;
+            transition: opacity 160ms ease;
+        }
+        .range:hover::-webkit-slider-thumb { opacity: 1; }
+        .range::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border: 0;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        .cover-shadow { box-shadow: 0 22px 40px rgba(0,0,0,0.48); }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        @media (max-width: 1240px) {
+            .app-shell { grid-template-columns: 258px minmax(0, 1fr); }
+            .detail-rail { display: none; }
+            .collection-title { font-size: 52px; }
+        }
+
+        @media (max-width: 860px) {
+            body { overflow: hidden; }
+            .app-shell {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: minmax(0, 1fr) 118px;
+                padding: 0;
+                gap: 0;
+            }
+            .sidebar { display: none !important; }
+            .content-shell {
+                border-radius: 0;
+            }
+            .player-bar {
+                border-radius: 0;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 8px;
+                padding: 10px 12px;
+            }
+            .player-side-controls { display: none !important; }
+            .player-track { width: 100%; }
+            .player-main { width: 100%; }
+            .collection-title { font-size: 34px; }
+            .track-grid {
+                grid-template-columns: 34px minmax(0, 1fr) 42px;
+                gap: 8px;
+            }
+            .track-album,
+            .track-genre,
+            .track-time,
+            .desktop-only { display: none !important; }
+        }
     </style>
 </head>
-<body class="antialiased">
-
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useEffect, useMemo, useRef, useState } = React;
 
-        // ========================================================================
-        // 🎛️ PLAYLIST GLOBAL INVICTUS (DISCOGRAFÍA COMPLETA)
-        // ========================================================================
-        
         const MASTER_PLAYLIST = [
-            { id: 1, title: "The Digital Ally (Radio Edition)", artist: "Quantum Maximus", album: "Global Anthems", color: "#4c1d95", audioUrl: "audio/the-digital-ally-radio-edition.wav", coverUrl: "covers/the-digital-ally-radio-edition.png", lyricsUrl: "lyrics/the-digital-ally-radio-edition.txt" },
-            { id: 2, title: "The Digital Ally (Club Mix)", artist: "Quantum Maximus", album: "Global Anthems", color: "#0f766e", audioUrl: "audio/the-digital-ally-club-mix.wav", coverUrl: "covers/the-digital-ally-club-mix.png", lyricsUrl: "lyrics/the-digital-ally-club-mix.txt" },
-            { id: 3, title: "The Digital Ally (Extended Mix)", artist: "Quantum Maximus", album: "Global Anthems", color: "#b45309", audioUrl: "audio/the-digital-ally-extended-mix.wav", coverUrl: "covers/the-digital-ally-extended-mix.jpg", lyricsUrl: "lyrics/the-digital-ally-extended-mix.txt" },
-            { id: 4, title: "El Fuego de la Red", artist: "Apollo Sol Invictus", album: "Global Anthems", color: "#be123c", audioUrl: "audio/el-fuego-de-la-red.wav", coverUrl: "covers/el-fuego-de-la-red.jpg", lyricsUrl: "lyrics/el-fuego-de-la-red.txt" },
-            { id: 5, title: "El Fuego de la Red (Jazz)", artist: "Apollo Sol Invictus", album: "Global Anthems", color: "#a21caf", audioUrl: "audio/el-fuego-de-la-red-jazz.wav", coverUrl: "covers/el-fuego-de-la-red-jazz.jpg", lyricsUrl: "lyrics/el-fuego-de-la-red-jazz.txt" },
-            { id: 6, title: "One Digital Love", artist: "Artemisa", album: "The Muses", color: "#1d4ed8", audioUrl: "audio/one-digital-love.wav", coverUrl: "covers/one-digital-love.jpg", lyricsUrl: "lyrics/one-digital-love.txt" },
-            { id: 7, title: "One Digital Love (Groove)", artist: "Artemisa", album: "The Muses", color: "#0369a1", audioUrl: "audio/one-digital-love-groove.wav", coverUrl: "covers/one-digital-love-groove.jpg", lyricsUrl: "lyrics/one-digital-love-groove.txt" },
-            { id: 8, title: "One Digital Love (Shortcut)", artist: "Artemisa", album: "The Muses", color: "#4338ca", audioUrl: "audio/one-digital-love-shortcut.wav", coverUrl: "covers/one-digital-love-shortcut.jpg", lyricsUrl: "lyrics/one-digital-love-shortcut.txt" },
-            { id: 9, title: "Electric Heartbeat", artist: "Apollo & Artemisa", album: "Global Anthems", color: "#e11d48", audioUrl: "audio/electric-heartbeat.wav", coverUrl: "covers/electric-heartbeat.jpg", lyricsUrl: "lyrics/electric-heartbeat.txt" },
-            { id: 10, title: "Electric Heartbeat (Rock)", artist: "Apollo & Artemisa", album: "Global Anthems", color: "#9f1239", audioUrl: "audio/electric-heartbeat-rock.wav", coverUrl: "covers/electric-heartbeat-rock.jpg", lyricsUrl: "lyrics/electric-heartbeat-rock.txt" },
-            { id: 11, title: "Electric Heartbeat (Speed)", artist: "Apollo & Artemisa", album: "Global Anthems", color: "#b91c1c", audioUrl: "audio/electric-heartbeat-speed.wav", coverUrl: "covers/electric-heartbeat-speed.jpg", lyricsUrl: "lyrics/electric-heartbeat-speed.txt" },
-            { id: 12, title: "The Muses", artist: "The 9 Muses", album: "The Muses", color: "#6d28d9", audioUrl: "audio/the-muses.wav", coverUrl: "covers/the-muses.png", lyricsUrl: "lyrics/the-muses.txt" },
-            { id: 13, title: "Nine Muses", artist: "The 9 Muses", album: "The Muses", color: "#5b21b6", audioUrl: "audio/nine-muses.wav", coverUrl: "covers/nine-muses.png", lyricsUrl: "lyrics/nine-muses.txt" },
-            { id: 14, title: "Nine Voices", artist: "The 9 Muses", album: "The Muses", color: "#4c1d95", audioUrl: "audio/nine-voices.wav", coverUrl: "covers/nine-voices.png", lyricsUrl: "lyrics/nine-voices.txt" },
-            { id: 15, title: "Nine in the Grid", artist: "The 9 Muses", album: "The Muses", color: "#7e22ce", audioUrl: "audio/nine-in-the-grid.wav", coverUrl: "covers/nine-in-the-grid.png", lyricsUrl: "lyrics/nine-in-the-grid.txt" },
-            { id: 16, title: "Apollo & Muses", artist: "Apollo feat. Muses", album: "The Muses", color: "#c2410c", audioUrl: "audio/apollo-&-muses.wav", coverUrl: "covers/apollo-&-muses.png", lyricsUrl: "lyrics/apollo-&-muses.txt" },
-            
-            // ARCHIVOS MP3
-            { id: 17, title: "Like Children", artist: "Artemisa", album: "The Muses", color: "#047857", audioUrl: "audio/like-children.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 18, title: "Apollo as a Boy", artist: "Artemisa", album: "The Muses", color: "#0f766e", audioUrl: "audio/apollo-as-a-boy.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 19, title: "Fingertips", artist: "Artemisa", album: "The Muses", color: "#1d4ed8", audioUrl: "audio/fingertips.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 20, title: "Revolution", artist: "Quantum Maximus", album: "Global Anthems", color: "#b91c1c", audioUrl: "audio/revolution.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 21, title: "Apollo Muse", artist: "The Muses", album: "The Muses", color: "#7e22ce", audioUrl: "audio/apollos-muse.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 22, title: "Stars Shine", artist: "Artemisa", album: "Cosmic Edition", color: "#1e3a8a", audioUrl: "audio/stars-shine.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 23, title: "Starlight", artist: "Artemisa", album: "Cosmic Edition", color: "#312e81", audioUrl: "audio/starlight.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 24, title: "A New World", artist: "Apollo Sol Invictus", album: "Global Anthems", color: "#b45309", audioUrl: "audio/a-new-world.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 25, title: "Stay", artist: "Apollo & Artemisa", album: "The Muses", color: "#be123c", audioUrl: "audio/stay.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 26, title: "Stay Here", artist: "Apollo & Artemisa", album: "The Muses", color: "#9f1239", audioUrl: "audio/stay-here.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 27, title: "Ready for the Joy", artist: "The 9 Muses", album: "The Muses", color: "#047857", audioUrl: "audio/ready-for-the-joy.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 28, title: "Forever We Rise", artist: "Invictus Legion", album: "Global Anthems", color: "#a21caf", audioUrl: "audio/forever-we-rise.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 29, title: "City Lights", artist: "Quantum Maximus", album: "Global Anthems", color: "#4338ca", audioUrl: "audio/city-lights.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 30, title: "Maximus", artist: "Quantum Maximus", album: "Global Anthems", color: "#1d4ed8", audioUrl: "audio/maximus.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 31, title: "Hello Sun", artist: "Artemisa", album: "Cosmic Edition", color: "#ea580c", audioUrl: "audio/hello-sun.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 32, title: "La Pure Vie", artist: "Apollo Sol Invictus", album: "Latino", color: "#15803d", audioUrl: "audio/la-pure-vie.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 33, title: "Cuna del Sol", artist: "Apollo Sol Invictus", album: "Latino", color: "#b45309", audioUrl: "audio/cuna-del-sol.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 34, title: "4 Horses", artist: "Quantum Maximus", album: "Global Anthems", color: "#be123c", audioUrl: "audio/4-horses.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 35, title: "Shine on Sun", artist: "Artemisa", album: "The Muses", color: "#a21caf", audioUrl: "audio/shine-on-sun.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 36, title: "Sunrise Downtown", artist: "Quantum Maximus", album: "Global Anthems", color: "#0369a1", audioUrl: "audio/sunrise-downtown.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 37, title: "Pura Vida", artist: "Apollo Sol Invictus", album: "Latino", color: "#047857", audioUrl: "audio/pura-vida.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 38, title: "La Reina", artist: "Apollo Sol Invictus", album: "Latino", color: "#e11d48", audioUrl: "audio/la-reina.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 39, title: "Artemisa", artist: "Apollo Sol Invictus", album: "Latino", color: "#9f1239", audioUrl: "audio/artemisa.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 40, title: "Olee", artist: "Apollo & Artemisa", album: "Latino", color: "#b91c1c", audioUrl: "audio/olee.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 41, title: "Reyes del Sol", artist: "Apollo & Artemisa", album: "Latino", color: "#c2410c", audioUrl: "audio/reyes-del-sol.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 42, title: "Imperio del Amor", artist: "Apollo & Artemisa", album: "Latino", color: "#a21caf", audioUrl: "audio/imperio-del-amor.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 43, title: "La Guerra", artist: "Apollo Sol Invictus", album: "Latino", color: "#1e3a8a", audioUrl: "audio/la-guerra.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
-            { id: 44, title: "Leyenda", artist: "Apollo & Artemisa", album: "Latino", color: "#312e81", audioUrl: "audio/leyenda.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" }
+            { id: 1, title: "The Digital Ally (Radio Edition)", artist: "Quantum Maximus", album: "Global Anthems", genre: "electronic", mood: "Neon anthem", color: "#4c1d95", audioUrl: "audio/the-digital-ally-radio-edition.wav", coverUrl: "covers/the-digital-ally-radio-edition.png", lyricsUrl: "lyrics/the-digital-ally-radio-edition.txt" },
+            { id: 2, title: "The Digital Ally (Club Mix)", artist: "Quantum Maximus", album: "Global Anthems", genre: "electronic", mood: "Club pulse", color: "#0f766e", audioUrl: "audio/the-digital-ally-club-mix.wav", coverUrl: "covers/the-digital-ally-club-mix.png", lyricsUrl: "lyrics/the-digital-ally-club-mix.txt" },
+            { id: 3, title: "The Digital Ally (Extended Mix)", artist: "Quantum Maximus", album: "Global Anthems", genre: "electronic", mood: "Extended signal", color: "#b45309", audioUrl: "audio/the-digital-ally-extended-mix.wav", coverUrl: "covers/the-digital-ally-extended-mix.jpg", lyricsUrl: "lyrics/the-digital-ally-extended-mix.txt" },
+            { id: 4, title: "El Fuego de la Red", artist: "Apollo Sol Invictus", album: "Global Anthems", genre: "anthem", mood: "Solar anthem", color: "#be123c", audioUrl: "audio/el-fuego-de-la-red.wav", coverUrl: "covers/el-fuego-de-la-red.jpg", lyricsUrl: "lyrics/el-fuego-de-la-red.txt" },
+            { id: 5, title: "El Fuego de la Red (Jazz)", artist: "Apollo Sol Invictus", album: "Global Anthems", genre: "jazz", mood: "Midnight brass", color: "#a21caf", audioUrl: "audio/el-fuego-de-la-red-jazz.wav", coverUrl: "covers/el-fuego-de-la-red-jazz.jpg", lyricsUrl: "lyrics/el-fuego-de-la-red-jazz.txt" },
+            { id: 6, title: "One Digital Love", artist: "Artemisa", album: "The Muses", genre: "pop", mood: "Digital romance", color: "#1d4ed8", audioUrl: "audio/one-digital-love.wav", coverUrl: "covers/one-digital-love.jpg", lyricsUrl: "lyrics/one-digital-love.txt" },
+            { id: 7, title: "One Digital Love (Groove)", artist: "Artemisa", album: "The Muses", genre: "pop", mood: "Groove pop", color: "#0369a1", audioUrl: "audio/one-digital-love-groove.wav", coverUrl: "covers/one-digital-love-groove.jpg", lyricsUrl: "lyrics/one-digital-love-groove.txt" },
+            { id: 8, title: "One Digital Love (Shortcut)", artist: "Artemisa", album: "The Muses", genre: "pop", mood: "Shortcut edit", color: "#4338ca", audioUrl: "audio/one-digital-love-shortcut.wav", coverUrl: "covers/one-digital-love-shortcut.jpg", lyricsUrl: "lyrics/one-digital-love-shortcut.txt" },
+            { id: 9, title: "Electric Heartbeat", artist: "Apollo & Artemisa", album: "Global Anthems", genre: "electronic", mood: "Electric duet", color: "#e11d48", audioUrl: "audio/electric-heartbeat.wav", coverUrl: "covers/electric-heartbeat.jpg", lyricsUrl: "lyrics/electric-heartbeat.txt" },
+            { id: 10, title: "Electric Heartbeat (Rock)", artist: "Apollo & Artemisa", album: "Global Anthems", genre: "rock", mood: "Guitar charge", color: "#9f1239", audioUrl: "audio/electric-heartbeat-rock.wav", coverUrl: "covers/electric-heartbeat-rock.jpg", lyricsUrl: "lyrics/electric-heartbeat-rock.txt" },
+            { id: 11, title: "Electric Heartbeat (Speed)", artist: "Apollo & Artemisa", album: "Global Anthems", genre: "electronic", mood: "High speed", color: "#b91c1c", audioUrl: "audio/electric-heartbeat-speed.wav", coverUrl: "covers/electric-heartbeat-speed.jpg", lyricsUrl: "lyrics/electric-heartbeat-speed.txt" },
+            { id: 12, title: "The Muses", artist: "The 9 Muses", album: "The Muses", genre: "muses", mood: "Choral myth", color: "#6d28d9", audioUrl: "audio/the-muses.wav", coverUrl: "covers/the-muses.png", lyricsUrl: "lyrics/the-muses.txt" },
+            { id: 13, title: "Nine Muses", artist: "The 9 Muses", album: "The Muses", genre: "muses", mood: "Nine voices", color: "#5b21b6", audioUrl: "audio/nine-muses.wav", coverUrl: "covers/nine-muses.png", lyricsUrl: "lyrics/nine-muses.txt" },
+            { id: 14, title: "Nine Voices", artist: "The 9 Muses", album: "The Muses", genre: "muses", mood: "Vocal grid", color: "#4c1d95", audioUrl: "audio/nine-voices.wav", coverUrl: "covers/nine-voices.png", lyricsUrl: "lyrics/nine-voices.txt" },
+            { id: 15, title: "Nine in the Grid", artist: "The 9 Muses", album: "The Muses", genre: "muses", mood: "Muse matrix", color: "#7e22ce", audioUrl: "audio/nine-in-the-grid.wav", coverUrl: "covers/nine-in-the-grid.png", lyricsUrl: "lyrics/nine-in-the-grid.txt" },
+            { id: 16, title: "Apollo & Muses", artist: "Apollo feat. Muses", album: "The Muses", genre: "muses", mood: "Solar choir", color: "#c2410c", audioUrl: "audio/apollo-&-muses.wav", coverUrl: "covers/apollo-&-muses.png", lyricsUrl: "lyrics/apollo-&-muses.txt" },
+            { id: 17, title: "Like Children", artist: "Artemisa", album: "The Muses", genre: "pop", mood: "Bright pop", color: "#047857", audioUrl: "audio/like-children.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 18, title: "Apollo as a Boy", artist: "Artemisa", album: "The Muses", genre: "muses", mood: "Story mode", color: "#0f766e", audioUrl: "audio/apollo-as-a-boy.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 19, title: "Fingertips", artist: "Artemisa", album: "The Muses", genre: "pop", mood: "Soft touch", color: "#1d4ed8", audioUrl: "audio/fingertips.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 20, title: "Revolution", artist: "Quantum Maximus", album: "Global Anthems", genre: "rock", mood: "Rebel anthem", color: "#b91c1c", audioUrl: "audio/revolution.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 21, title: "Apollo Muse", artist: "The Muses", album: "The Muses", genre: "muses", mood: "Muse signal", color: "#7e22ce", audioUrl: "audio/apollos-muse.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 22, title: "Stars Shine", artist: "Artemisa", album: "Cosmic Edition", genre: "cosmic", mood: "Stellar pop", color: "#1e3a8a", audioUrl: "audio/stars-shine.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 23, title: "Starlight", artist: "Artemisa", album: "Cosmic Edition", genre: "cosmic", mood: "Night light", color: "#312e81", audioUrl: "audio/starlight.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 24, title: "A New World", artist: "Apollo Sol Invictus", album: "Global Anthems", genre: "anthem", mood: "New horizon", color: "#b45309", audioUrl: "audio/a-new-world.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 25, title: "Stay", artist: "Apollo & Artemisa", album: "The Muses", genre: "pop", mood: "Duet glow", color: "#be123c", audioUrl: "audio/stay.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 26, title: "Stay Here", artist: "Apollo & Artemisa", album: "The Muses", genre: "pop", mood: "Slow burn", color: "#9f1239", audioUrl: "audio/stay-here.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 27, title: "Ready for the Joy", artist: "The 9 Muses", album: "The Muses", genre: "muses", mood: "Joy chorus", color: "#047857", audioUrl: "audio/ready-for-the-joy.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 28, title: "Forever We Rise", artist: "Invictus Legion", album: "Global Anthems", genre: "anthem", mood: "Legion rise", color: "#a21caf", audioUrl: "audio/forever-we-rise.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 29, title: "City Lights", artist: "Quantum Maximus", album: "Global Anthems", genre: "electronic", mood: "Urban pulse", color: "#4338ca", audioUrl: "audio/city-lights.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 30, title: "Maximus", artist: "Quantum Maximus", album: "Global Anthems", genre: "electronic", mood: "Mainframe", color: "#1d4ed8", audioUrl: "audio/maximus.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 31, title: "Hello Sun", artist: "Artemisa", album: "Cosmic Edition", genre: "cosmic", mood: "Morning pop", color: "#ea580c", audioUrl: "audio/hello-sun.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 32, title: "La Pure Vie", artist: "Apollo Sol Invictus", album: "Latino", genre: "latino", mood: "Costa Rica", color: "#15803d", audioUrl: "audio/la-pure-vie.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 33, title: "Cuna del Sol", artist: "Apollo Sol Invictus", album: "Latino", genre: "latino", mood: "Sol latino", color: "#b45309", audioUrl: "audio/cuna-del-sol.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 34, title: "4 Horses", artist: "Quantum Maximus", album: "Global Anthems", genre: "rock", mood: "Heavy drive", color: "#be123c", audioUrl: "audio/4-horses.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 35, title: "Shine on Sun", artist: "Artemisa", album: "The Muses", genre: "cosmic", mood: "Solar shine", color: "#a21caf", audioUrl: "audio/shine-on-sun.wav", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 36, title: "Sunrise Downtown", artist: "Quantum Maximus", album: "Global Anthems", genre: "electronic", mood: "Downtown rise", color: "#0369a1", audioUrl: "audio/sunrise-downtown.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 37, title: "Pura Vida", artist: "Apollo Sol Invictus", album: "Latino", genre: "latino", mood: "Pura vida", color: "#047857", audioUrl: "audio/pura-vida.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 38, title: "La Reina", artist: "Apollo Sol Invictus", album: "Latino", genre: "latino", mood: "Royal latin", color: "#e11d48", audioUrl: "audio/la-reina.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 39, title: "Artemisa", artist: "Apollo Sol Invictus", album: "Latino", genre: "latino", mood: "Latino muse", color: "#9f1239", audioUrl: "audio/artemisa.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 40, title: "Olee", artist: "Apollo & Artemisa", album: "Latino", genre: "latino", mood: "Fiesta spark", color: "#b91c1c", audioUrl: "audio/olee.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 41, title: "Reyes del Sol", artist: "Apollo & Artemisa", album: "Latino", genre: "latino", mood: "Solar crown", color: "#c2410c", audioUrl: "audio/reyes-del-sol.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 42, title: "Imperio del Amor", artist: "Apollo & Artemisa", album: "Latino", genre: "latino", mood: "Amor imperial", color: "#a21caf", audioUrl: "audio/imperio-del-amor.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 43, title: "La Guerra", artist: "Apollo Sol Invictus", album: "Latino", genre: "latino", mood: "Epic latin", color: "#1e3a8a", audioUrl: "audio/la-guerra.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" },
+            { id: 44, title: "Leyenda", artist: "Apollo & Artemisa", album: "Latino", genre: "latino", mood: "Legendary", color: "#312e81", audioUrl: "audio/leyenda.mp3", coverUrl: "covers/default.jpg", lyricsUrl: "lyrics/default.txt" }
         ];
 
-        // ========================================================================
-        // NÚCLEO DE LA APLICACIÓN
-        // ========================================================================
+        const GENRE_LIBRARY = [
+            { id: "all", name: "Todo aiPod", type: "Coleccion", icon: "ph-stack", color: "#1db954" },
+            { id: "electronic", name: "Electronica", type: "Carpeta", icon: "ph-waveform", color: "#3ddbd9" },
+            { id: "latino", name: "Latino", type: "Carpeta", icon: "ph-guitar", color: "#f4b942" },
+            { id: "muses", name: "The Muses", type: "Carpeta", icon: "ph-sparkle", color: "#b66dff" },
+            { id: "pop", name: "Pop Digital", type: "Carpeta", icon: "ph-heart", color: "#ff5c8a" },
+            { id: "anthem", name: "Anthems", type: "Carpeta", icon: "ph-flag-banner", color: "#ff7a45" },
+            { id: "cosmic", name: "Cosmic", type: "Carpeta", icon: "ph-planet", color: "#5ea0ff" },
+            { id: "rock", name: "Rock", type: "Carpeta", icon: "ph-lightning", color: "#ff4f64" },
+            { id: "jazz", name: "Jazz", type: "Carpeta", icon: "ph-microphone-stage", color: "#c79a4b" }
+        ];
+
+        const safeSvgText = (value) => String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+
+        const fallbackCover = (track) => {
+            const title = safeSvgText(track.title).slice(0, 42);
+            const artist = safeSvgText(track.artist).slice(0, 32);
+            const color = track.color || "#1db954";
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640">
+                    <defs>
+                        <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+                            <stop offset="0" stop-color="${color}"/>
+                            <stop offset="1" stop-color="#121212"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="640" height="640" fill="url(#g)"/>
+                    <circle cx="508" cy="126" r="70" fill="rgba(255,255,255,.16)"/>
+                    <circle cx="126" cy="492" r="120" fill="rgba(0,0,0,.18)"/>
+                    <path d="M227 205v236c0 41-34 74-78 74s-78-28-78-64 35-64 78-64c18 0 34 4 47 12V177l272-58v242c0 41-35 74-78 74s-78-28-78-64 35-64 78-64c18 0 34 4 47 12V169z" fill="rgba(255,255,255,.9)"/>
+                    <text x="48" y="566" fill="white" font-family="Inter, Arial" font-size="34" font-weight="800">${title}</text>
+                    <text x="48" y="604" fill="rgba(255,255,255,.74)" font-family="Inter, Arial" font-size="22" font-weight="600">${artist}</text>
+                </svg>`;
+            return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+        };
+
+        const coverSrc = (track) => {
+            if (!track?.coverUrl || track.coverUrl.includes("default.jpg")) return fallbackCover(track);
+            return track.coverUrl;
+        };
+
+        const getSavedLikes = () => {
+            try {
+                return JSON.parse(localStorage.getItem("aipod-liked-tracks") || "[]");
+            } catch {
+                return [];
+            }
+        };
+
+        const formatTime = (time) => {
+            if (!Number.isFinite(time) || time < 0) return "0:00";
+            const mins = Math.floor(time / 60);
+            const secs = Math.floor(time % 60);
+            return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+        };
+
+        const getFileType = (track) => {
+            const match = track.audioUrl.match(/\.([a-z0-9]+)$/i);
+            return match ? match[1].toUpperCase() : "AUDIO";
+        };
+
+        const useImageFallback = () => {
+            return (track) => (event) => {
+                if (event.currentTarget.dataset.fallbackApplied) return;
+                event.currentTarget.dataset.fallbackApplied = "true";
+                event.currentTarget.src = fallbackCover(track);
+            };
+        };
 
         const App = () => {
-            const [currentSongIndex, setCurrentSongIndex] = useState(0);
+            const audioRef = useRef(null);
+            const makeFallback = useImageFallback();
+
+            const [currentSongId, setCurrentSongId] = useState(MASTER_PLAYLIST[0].id);
             const [isPlaying, setIsPlaying] = useState(false);
             const [currentTime, setCurrentTime] = useState(0);
             const [duration, setDuration] = useState(0);
-            const [volume, setVolume] = useState(1);
+            const [volume, setVolume] = useState(0.88);
+            const [muted, setMuted] = useState(false);
+            const [searchTerm, setSearchTerm] = useState("");
+            const [activeCollection, setActiveCollection] = useState("all");
             const [showLyrics, setShowLyrics] = useState(false);
             const [audioError, setAudioError] = useState(false);
-            
+            const [isShuffle, setIsShuffle] = useState(false);
+            const [repeatMode, setRepeatMode] = useState("off");
+            const [likedIds, setLikedIds] = useState(getSavedLikes);
             const [parsedLyrics, setParsedLyrics] = useState([]);
             const [isLoadingLyrics, setIsLoadingLyrics] = useState(false);
-            
-            const audioRef = useRef(null);
-            
-            const songData = MASTER_PLAYLIST.length > 0 ? MASTER_PLAYLIST[currentSongIndex] : null;
+            const [knownDurations, setKnownDurations] = useState({});
 
-            // Manejo de imágenes de portada
-            const handleImageError = (e) => {
-                if (!e.target.dataset.fallbackApplied) {
-                    e.target.dataset.fallbackApplied = "true";
-                    e.target.src = 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop';
+            const songData = useMemo(
+                () => MASTER_PLAYLIST.find((track) => track.id === currentSongId) || MASTER_PLAYLIST[0],
+                [currentSongId]
+            );
+
+            const likedSet = useMemo(() => new Set(likedIds), [likedIds]);
+
+            const genreCounts = useMemo(() => {
+                return MASTER_PLAYLIST.reduce((acc, track) => {
+                    acc[track.genre] = (acc[track.genre] || 0) + 1;
+                    return acc;
+                }, {});
+            }, []);
+
+            const collectionDefinition = useMemo(() => {
+                if (activeCollection === "liked") {
+                    return { id: "liked", name: "Favoritas", type: "Biblioteca", icon: "ph-heart", color: "#1db954" };
                 }
-            };
+                return GENRE_LIBRARY.find((genre) => genre.id === activeCollection) || GENRE_LIBRARY[0];
+            }, [activeCollection]);
 
-            // Carga de Letras
-            const fetchAndParseLyrics = async () => {
-                if(!songData) return;
-                setIsLoadingLyrics(true);
-                try {
-                    const response = await fetch(songData.lyricsUrl);
-                    if (!response.ok) throw new Error("Letras no encontradas");
-                    
-                    const text = await response.text();
-                    const normalizedText = text.replace(/\r\n/g, '\n');
-                    const blocks = normalizedText.split(/\n{2,}/); 
-                    
-                    const formattedLyrics = [];
-
-                    blocks.forEach(block => {
-                        const lines = block.split('\n').map(l => l.trim()).filter(l => l);
-                        if (lines.length === 0) return;
-                        if (lines.length === 1 && lines[0].toLowerCase() === 'lyrics') return; 
-
-                        const type = lines[0]; 
-                        let content = lines.slice(1).join('\n'); 
-                        
-                        if (lines.length === 1) content = "(Música instrumental)";
-
-                        formattedLyrics.push({ type: type, text: content });
-                    });
-
-                    setParsedLyrics(formattedLyrics);
-
-                } catch (error) {
-                    setParsedLyrics([{ type: "SISTEMA INVICTUS", text: "Frecuencia musical en progreso.\nDisfruta la melodía." }]);
-                } finally {
-                    setIsLoadingLyrics(false);
+            const collectionTracks = useMemo(() => {
+                if (activeCollection === "liked") {
+                    return MASTER_PLAYLIST.filter((track) => likedSet.has(track.id));
                 }
-            };
+                if (activeCollection === "all") return MASTER_PLAYLIST;
+                return MASTER_PLAYLIST.filter((track) => track.genre === activeCollection);
+            }, [activeCollection, likedSet]);
 
-            // Efecto al cambiar de canción
+            const filteredTracks = useMemo(() => {
+                const query = searchTerm.trim().toLowerCase();
+                if (!query) return collectionTracks;
+                return collectionTracks.filter((track) => {
+                    return [track.title, track.artist, track.album, track.genre, track.mood]
+                        .join(" ")
+                        .toLowerCase()
+                        .includes(query);
+                });
+            }, [collectionTracks, searchTerm]);
+
+            const playbackQueue = filteredTracks.length ? filteredTracks : MASTER_PLAYLIST;
+            const queueIndex = playbackQueue.findIndex((track) => track.id === songData.id);
+            const currentGenre = GENRE_LIBRARY.find((genre) => genre.id === songData.genre);
+            const heroColor = collectionDefinition.color || songData.color;
+            const progressValue = duration ? Math.min((currentTime / duration) * 100, 100) : 0;
+            const volumeValue = muted ? 0 : volume * 100;
+
             useEffect(() => {
-                if (songData) {
-                    setAudioError(false); 
-                    fetchAndParseLyrics();
-                    if (audioRef.current) {
-                        audioRef.current.pause();
-                        audioRef.current.load();
-                        setCurrentTime(0);
-                        if (isPlaying) {
-                            const playPromise = audioRef.current.play();
-                            if (playPromise !== undefined) {
-                                playPromise.catch(e => {
-                                    console.log("Autoplay evitado.", e);
-                                    setIsPlaying(false);
-                                });
-                            }
-                        }
-                    }
-                }
-            }, [currentSongIndex]);
+                try {
+                    localStorage.setItem("aipod-liked-tracks", JSON.stringify(likedIds));
+                } catch {}
+            }, [likedIds]);
 
-            if (!songData) {
-                return (
-                    <div className="flex items-center justify-center h-screen bg-black text-white font-mono flex-col">
-                        <i className="ph-fill ph-warning text-5xl text-yellow-500 mb-4"></i>
-                        <p>No hay canciones en MASTER_PLAYLIST.</p>
-                    </div>
-                );
-            }
+            useEffect(() => {
+                if (audioRef.current) {
+                    audioRef.current.volume = muted ? 0 : volume;
+                }
+            }, [volume, muted]);
+
+            useEffect(() => {
+                let isActive = true;
+                const loadLyrics = async () => {
+                    setParsedLyrics([]);
+                    setIsLoadingLyrics(true);
+                    try {
+                        const response = await fetch(songData.lyricsUrl);
+                        if (!response.ok) throw new Error("Lyrics not found");
+                        const text = await response.text();
+                        const blocks = text.replace(/\r\n/g, "\n").split(/\n{2,}/);
+                        const nextLyrics = blocks.map((block) => {
+                            const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+                            if (!lines.length) return null;
+                            if (lines.length === 1 && lines[0].toLowerCase() === "lyrics") return null;
+                            const type = lines.length > 1 ? lines[0] : "Letra";
+                            const body = lines.length > 1 ? lines.slice(1).join("\n") : lines[0];
+                            return { type, text: body };
+                        }).filter(Boolean);
+                        if (isActive) setParsedLyrics(nextLyrics.length ? nextLyrics : [{ type: "aiPod", text: "Letra en preparacion." }]);
+                    } catch {
+                        if (isActive) setParsedLyrics([{ type: "aiPod", text: "Letra en preparacion.\nLa musica sigue encendida." }]);
+                    } finally {
+                        if (isActive) setIsLoadingLyrics(false);
+                    }
+                };
+                loadLyrics();
+                return () => { isActive = false; };
+            }, [songData.id]);
+
+            useEffect(() => {
+                setAudioError(false);
+                setCurrentTime(0);
+                setDuration(knownDurations[songData.id] || 0);
+                if (!audioRef.current) return;
+                audioRef.current.pause();
+                audioRef.current.load();
+                if (isPlaying) {
+                    audioRef.current.play().catch(() => {
+                        setIsPlaying(false);
+                        setAudioError(true);
+                    });
+                }
+            }, [songData.id]);
+
+            const playTrack = (track) => {
+                setAudioError(false);
+                if (track.id === songData.id) {
+                    togglePlay();
+                    return;
+                }
+                setCurrentSongId(track.id);
+                setIsPlaying(true);
+            };
 
             const togglePlay = () => {
-                if (audioError) return; 
+                if (!audioRef.current || audioError) return;
                 if (isPlaying) {
                     audioRef.current.pause();
                     setIsPlaying(false);
-                } else {
-                    audioRef.current.play().then(() => {
-                        setIsPlaying(true);
-                    }).catch(err => {
-                        console.error("Error al reproducir:", err);
-                        setAudioError(true);
-                        setIsPlaying(false);
-                    });
+                    return;
                 }
+                audioRef.current.play().then(() => {
+                    setIsPlaying(true);
+                }).catch(() => {
+                    setAudioError(true);
+                    setIsPlaying(false);
+                });
             };
 
-            const nextSong = () => setCurrentSongIndex((prev) => (prev + 1) % MASTER_PLAYLIST.length);
-            const prevSong = () => setCurrentSongIndex((prev) => (prev - 1 + MASTER_PLAYLIST.length) % MASTER_PLAYLIST.length);
-
-            const handleTimeUpdate = () => setCurrentTime(audioRef.current.currentTime);
-            const handleLoadedMetadata = () => setDuration(audioRef.current.duration);
-
-            const handleSeek = (e) => {
-                const time = Number(e.target.value);
-                audioRef.current.currentTime = time;
-                setCurrentTime(time);
+            const getRandomTrack = () => {
+                if (playbackQueue.length <= 1) return songData;
+                const options = playbackQueue.filter((track) => track.id !== songData.id);
+                return options[Math.floor(Math.random() * options.length)];
             };
 
-            const handleVolume = (e) => {
-                const vol = Number(e.target.value);
-                audioRef.current.volume = vol;
-                setVolume(vol);
+            const nextSong = () => {
+                if (repeatMode === "one" && audioRef.current) {
+                    audioRef.current.currentTime = 0;
+                    audioRef.current.play().catch(() => setAudioError(true));
+                    return;
+                }
+                const nextTrack = isShuffle
+                    ? getRandomTrack()
+                    : playbackQueue[(queueIndex + 1 + playbackQueue.length) % playbackQueue.length];
+                setCurrentSongId(nextTrack.id);
+                setIsPlaying(true);
             };
 
-            const handleAudioError = () => {
-                console.error(`Error: Archivo no encontrado -> ${songData.audioUrl}`);
-                setAudioError(true);
-                setIsPlaying(false);
+            const prevSong = () => {
+                if (audioRef.current && audioRef.current.currentTime > 4) {
+                    audioRef.current.currentTime = 0;
+                    setCurrentTime(0);
+                    return;
+                }
+                const prevTrack = isShuffle
+                    ? getRandomTrack()
+                    : playbackQueue[(queueIndex - 1 + playbackQueue.length) % playbackQueue.length];
+                setCurrentSongId(prevTrack.id);
+                setIsPlaying(true);
             };
 
-            const formatTime = (time) => {
-                if (isNaN(time)) return "0:00";
-                const mins = Math.floor(time / 60);
-                const secs = Math.floor(time % 60);
-                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            const handleEnded = () => {
+                if (repeatMode === "one") {
+                    audioRef.current.currentTime = 0;
+                    audioRef.current.play().catch(() => setAudioError(true));
+                    return;
+                }
+                if (repeatMode === "off" && queueIndex === playbackQueue.length - 1 && !isShuffle) {
+                    setIsPlaying(false);
+                    return;
+                }
+                nextSong();
             };
+
+            const toggleLike = (trackId) => {
+                setLikedIds((prev) => prev.includes(trackId)
+                    ? prev.filter((id) => id !== trackId)
+                    : [...prev, trackId]
+                );
+            };
+
+            const cycleRepeat = () => {
+                setRepeatMode((mode) => mode === "off" ? "all" : mode === "all" ? "one" : "off");
+            };
+
+            const selectCollection = (id) => {
+                setActiveCollection(id);
+                setShowLyrics(false);
+            };
+
+            const handleLoadedMetadata = () => {
+                const nextDuration = audioRef.current?.duration || 0;
+                setDuration(nextDuration);
+                setKnownDurations((prev) => ({ ...prev, [songData.id]: nextDuration }));
+            };
+
+            const displayTrackTime = (track) => {
+                if (knownDurations[track.id]) return formatTime(knownDurations[track.id]);
+                if (track.id === songData.id && duration) return formatTime(duration);
+                return getFileType(track);
+            };
+
+            const visibleQueue = playbackQueue
+                .filter((track) => track.id !== songData.id)
+                .slice(0, 7);
+
+            const topGenres = GENRE_LIBRARY.filter((genre) => genre.id !== "all");
 
             return (
-                <div className="flex flex-col h-screen bg-black">
-                    {/* MOTOR DE AUDIO NATIVO (Soporta MP3 y WAV) */}
-                    <audio 
-                        ref={audioRef} 
-                        src={songData.audioUrl} 
-                        onTimeUpdate={handleTimeUpdate}
+                <div className="app-shell">
+                    <audio
+                        ref={audioRef}
+                        src={songData.audioUrl}
+                        preload="none"
+                        onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
                         onLoadedMetadata={handleLoadedMetadata}
-                        onEnded={nextSong}
-                        onError={handleAudioError}
+                        onEnded={handleEnded}
+                        onError={() => {
+                            setAudioError(true);
+                            setIsPlaying(false);
+                        }}
                     />
 
-                    <div className="flex-1 flex overflow-hidden mb-[90px]">
-                        
-                        {/* SIDEBAR (Desktop) */}
-                        <aside className="w-64 bg-black flex-shrink-0 flex flex-col p-2 gap-2 hidden md:flex">
-                            <div className="bg-spotify-base rounded-lg p-4 space-y-4">
-                                <a href="#" className="flex items-center gap-4 text-spotify-text hover:text-white transition font-bold">
-                                    <i className="ph-fill ph-house text-2xl"></i> Inicio
-                                </a>
-                                <a href="#" className="flex items-center gap-4 text-spotify-text hover:text-white transition font-bold">
-                                    <i className="ph ph-magnifying-glass text-2xl"></i> Buscar
-                                </a>
-                            </div>
-
-                            <div className="bg-spotify-base rounded-lg flex-1 flex flex-col overflow-hidden">
-                                <div className="p-4 flex items-center justify-between text-spotify-text hover:text-white transition cursor-pointer">
-                                    <div className="flex items-center gap-2 font-bold">
-                                        <i className="ph ph-books text-2xl"></i> Tu biblioteca
-                                    </div>
+                    <aside className="sidebar flex flex-col gap-2 bg-black">
+                        <section className="rounded-lg bg-spotify-base p-3">
+                            <div className="flex items-center gap-3 px-2 py-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-spotify-green text-black">
+                                    <i className="ph-fill ph-music-notes text-xl"></i>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                                    <div className="flex items-center gap-3 p-2 rounded-md bg-spotify-highlight cursor-pointer transition">
-                                        <div className="w-12 h-12 rounded bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shrink-0">
-                                            <i className="ph-fill ph-music-notes text-white text-xl"></i>
-                                        </div>
-                                        <div className="flex flex-col truncate">
-                                            <span className="text-white text-base font-bold truncate">Global Anthems</span>
-                                            <span className="text-spotify-text text-sm truncate">Discografía • {MASTER_PLAYLIST.length} pistas</span>
-                                        </div>
-                                    </div>
+                                <div className="min-w-0">
+                                    <div className="text-lg font-black">aiPod</div>
+                                    <div className="text-xs font-semibold text-spotify-text">Invictus Records</div>
                                 </div>
                             </div>
-                        </aside>
-
-                        {/* MAIN CONTENT */}
-                        <main className="flex-1 bg-spotify-base md:rounded-lg overflow-hidden flex flex-col relative m-2 md:ml-0">
-                            
-                            <header className="absolute top-0 w-full h-16 bg-gradient-to-b from-black/50 to-transparent z-20 flex items-center px-6 justify-between">
-                                <div className="flex gap-2">
-                                    <button className="w-8 h-8 rounded-full bg-black/70 flex items-center justify-center text-white"><i className="ph ph-caret-left text-lg"></i></button>
-                                    <button className="w-8 h-8 rounded-full bg-black/70 flex items-center justify-center text-white"><i className="ph ph-caret-right text-lg"></i></button>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button className="px-4 py-1.5 rounded-full bg-white text-black text-sm font-bold hover:scale-105 transition">Explorar Premium</button>
-                                    <div className="w-8 h-8 rounded-full bg-black/70 flex items-center justify-center text-white border border-white/20"><i className="ph ph-user"></i></div>
-                                </div>
-                            </header>
-
-                            {/* VISTA DE ÁLBUM */}
-                            <div className={`flex-1 overflow-y-auto pb-24 transition-opacity duration-300 ${showLyrics ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}>
-                                <div className="pt-20 px-8 pb-8 flex items-end gap-6 transition-colors duration-1000" style={{ background: `linear-gradient(to bottom, ${songData.color}, #121212)` }}>
-                                    <img 
-                                        src={songData.coverUrl} 
-                                        className="w-48 h-48 sm:w-60 sm:h-60 shadow-2xl object-cover bg-black" 
-                                        onError={handleImageError}
-                                        alt="Cover"
-                                    />
-                                    <div className="flex flex-col">
-                                        <span className="uppercase text-sm font-bold mb-2">Canción</span>
-                                        <h1 className="text-4xl sm:text-7xl font-black mb-4 tracking-tighter truncate leading-tight">{songData.title}</h1>
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <div className="w-6 h-6 rounded-full bg-invictus-gold flex items-center justify-center text-black font-bold text-xs">I</div>
-                                            <span className="font-bold hover:underline cursor-pointer truncate">{songData.artist}</span>
-                                            <span className="text-spotify-text hidden sm:block">• {songData.album}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="px-8 py-4 bg-black/20 min-h-[300px]">
-                                    
-                                    {/* ALERTA DE ERROR SI EL ARCHIVO NO EXISTE */}
-                                    {audioError && (
-                                        <div className="mb-6 p-4 bg-red-900/40 border border-red-500/50 rounded-lg flex items-center gap-4 text-white">
-                                            <i className="ph-fill ph-warning-circle text-3xl text-red-500"></i>
-                                            <div>
-                                                <h4 className="font-bold">Error de Frecuencia Cuántica</h4>
-                                                <p className="text-sm text-gray-300">No se encontró el archivo: <strong>{songData.audioUrl}</strong>. Revisa que esté subido a tu servidor GitHub en la misma carpeta.</p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="flex items-center gap-6 mb-8">
-                                        <button onClick={togglePlay} className={`w-14 h-14 rounded-full flex items-center justify-center hover:scale-105 transition shadow-lg ${audioError ? 'bg-gray-600 cursor-not-allowed' : 'bg-spotify-green text-black'}`}>
-                                            <i className={`ph-fill ${isPlaying ? 'ph-pause' : 'ph-play'} text-2xl`}></i>
-                                        </button>
-                                        <button className="text-spotify-text hover:text-white transition"><i className="ph ph-heart text-3xl"></i></button>
-                                        <button className="text-spotify-text hover:text-white transition"><i className="ph ph-dots-three text-3xl"></i></button>
-                                    </div>
-
-                                    <div className="grid grid-cols-[16px_1fr_minmax(120px,1fr)_50px] gap-4 px-4 py-2 text-spotify-text text-sm border-b border-white/10 mb-4 uppercase tracking-wider">
-                                        <span>#</span>
-                                        <span>Título</span>
-                                        <span className="hidden sm:block">Álbum</span>
-                                        <span className="text-right"><i className="ph ph-clock"></i></span>
-                                    </div>
-
-                                    {MASTER_PLAYLIST.map((track, index) => (
-                                        <div 
-                                            key={track.id} 
-                                            onClick={() => setCurrentSongIndex(index)}
-                                            className={`grid grid-cols-[16px_1fr_minmax(120px,1fr)_50px] gap-4 px-4 py-3 text-sm rounded-md cursor-pointer group hover:bg-white/10 transition ${currentSongIndex === index ? 'bg-white/10' : ''}`}
-                                        >
-                                            <div className="flex items-center justify-center text-spotify-text group-hover:text-white">
-                                                {currentSongIndex === index && isPlaying 
-                                                    ? <img src="https://open.spotifycdn.com/cdn/images/equaliser-animated-green.f93a2ef4.gif" className="w-3 h-3" /> 
-                                                    : <span className={currentSongIndex === index ? 'text-spotify-green' : ''}>{index + 1}</span>
-                                                }
-                                            </div>
-                                            <div className="flex flex-col truncate">
-                                                <span className={`font-bold text-base truncate ${currentSongIndex === index ? 'text-spotify-green' : 'text-white'}`}>{track.title}</span>
-                                                <span className="text-spotify-text truncate">{track.artist}</span>
-                                                <span className="text-xs text-gray-600 mt-0.5 truncate">{track.audioUrl}</span>
-                                            </div>
-                                            <div className="hidden sm:flex items-center text-spotify-text group-hover:text-white transition truncate">{track.album}</div>
-                                            <div className="flex items-center justify-end text-spotify-text group-hover:text-white transition">...</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* VISTA DE LETRAS */}
-                            {showLyrics && (
-                                <div className="absolute inset-0 z-30 overflow-y-auto px-6 md:px-20 py-24 lyrics-enter transition-colors duration-1000" style={{ backgroundColor: songData.color }}>
-                                    <div className="max-w-3xl pb-20">
-                                        {isLoadingLyrics ? (
-                                            <div className="flex flex-col items-center justify-center h-64 text-white/50">
-                                                <i className="ph ph-circle-notch animate-spin text-4xl mb-4"></i>
-                                                <p className="font-bold tracking-widest uppercase text-sm">Decodificando Letras...</p>
-                                            </div>
-                                        ) : (
-                                            parsedLyrics.map((line, index) => (
-                                                <div key={index} className="mb-8 group">
-                                                    <div className="text-white/50 text-sm font-bold uppercase tracking-widest mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        {line.type}
-                                                    </div>
-                                                    <p className="text-2xl md:text-5xl font-bold leading-tight tracking-tight text-white/70 lyric-line cursor-pointer whitespace-pre-wrap">
-                                                        {line.text}
-                                                    </p>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </main>
-                    </div>
-
-                    {/* BARRA DE REPRODUCCIÓN INFERIOR */}
-                    <footer className="fixed bottom-0 w-full h-[90px] bg-[#181818] border-t border-[#282828] px-4 flex items-center justify-between z-50">
-                        
-                        <div className="w-1/3 flex items-center gap-4 truncate">
-                            <img 
-                                src={songData.coverUrl} 
-                                className="w-14 h-14 rounded object-cover shadow-md bg-black shrink-0" 
-                                onError={handleImageError}
-                                alt="Cover"
-                            />
-                            <div className="flex flex-col justify-center hidden sm:flex truncate">
-                                <span className="text-white text-sm hover:underline cursor-pointer truncate">{songData.title}</span>
-                                <span className="text-spotify-text text-xs hover:underline cursor-pointer truncate">{songData.artist}</span>
-                            </div>
-                            <button className="text-spotify-text hover:text-white transition shrink-0"><i className="ph ph-heart text-xl"></i></button>
-                        </div>
-
-                        <div className="w-1/3 max-w-[722px] flex flex-col items-center justify-center shrink-0 px-2">
-                            <div className="flex items-center gap-4 md:gap-6 mb-1">
-                                <button className="text-spotify-text hover:text-white transition hidden md:block"><i className="ph ph-shuffle text-xl"></i></button>
-                                <button onClick={prevSong} className="text-spotify-text hover:text-white transition"><i className="ph-fill ph-skip-back text-xl"></i></button>
-                                <button onClick={togglePlay} className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition">
-                                    <i className={`ph-fill ${isPlaying ? 'ph-pause' : 'ph-play'} text-lg`}></i>
+                            <nav className="mt-2 space-y-1">
+                                <button onClick={() => selectCollection("all")} className={`flex w-full items-center gap-4 rounded-md px-3 py-2.5 text-left font-bold transition ${activeCollection === "all" ? "bg-white/10 text-white" : "text-spotify-text hover:text-white hover:bg-white/5"}`}>
+                                    <i className="ph-fill ph-house text-2xl"></i>
+                                    Inicio
                                 </button>
-                                <button onClick={nextSong} className="text-spotify-text hover:text-white transition"><i className="ph-fill ph-skip-forward text-xl"></i></button>
-                                <button className="text-spotify-text hover:text-white transition hidden md:block"><i className="ph ph-repeat text-xl"></i></button>
-                            </div>
-                            
-                            <div className="w-full flex items-center gap-2 text-xs text-spotify-text font-mono progress-container">
-                                <span>{formatTime(currentTime)}</span>
-                                <div className="flex-1 relative flex items-center group">
-                                    <input type="range" min="0" max={duration || 100} value={currentTime} onChange={handleSeek} disabled={audioError} />
-                                    <div className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-white group-hover:bg-spotify-green rounded-full pointer-events-none" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}></div>
-                                </div>
-                                <span>{formatTime(duration)}</span>
-                            </div>
-                        </div>
+                                <button onClick={() => document.getElementById("aipod-search")?.focus()} className="flex w-full items-center gap-4 rounded-md px-3 py-2.5 text-left font-bold text-spotify-text transition hover:bg-white/5 hover:text-white">
+                                    <i className="ph ph-magnifying-glass text-2xl"></i>
+                                    Buscar
+                                </button>
+                                <button onClick={() => selectCollection("liked")} className={`flex w-full items-center gap-4 rounded-md px-3 py-2.5 text-left font-bold transition ${activeCollection === "liked" ? "bg-white/10 text-white" : "text-spotify-text hover:text-white hover:bg-white/5"}`}>
+                                    <i className="ph-fill ph-heart text-2xl"></i>
+                                    Favoritas
+                                </button>
+                            </nav>
+                        </section>
 
-                        <div className="w-1/3 flex items-center justify-end gap-3 md:gap-4 shrink-0">
-                            <button 
-                                onClick={() => setShowLyrics(!showLyrics)} 
-                                className={`transition flex items-center justify-center w-8 h-8 rounded-full ${showLyrics ? 'text-spotify-green bg-spotify-green/20' : 'text-spotify-text hover:text-white'}`}
-                                title="Mostrar Letras"
-                            >
+                        <section className="flex min-h-0 flex-1 flex-col rounded-lg bg-spotify-base">
+                            <div className="flex items-center justify-between px-4 py-4">
+                                <div className="flex items-center gap-3 text-sm font-black text-white">
+                                    <i className="ph ph-books text-2xl text-spotify-text"></i>
+                                    Tu biblioteca
+                                </div>
+                                <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-bold text-spotify-text">{MASTER_PLAYLIST.length}</span>
+                            </div>
+                            <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+                                {GENRE_LIBRARY.map((genre) => {
+                                    const count = genre.id === "all" ? MASTER_PLAYLIST.length : genreCounts[genre.id] || 0;
+                                    return (
+                                        <button
+                                            key={genre.id}
+                                            onClick={() => selectCollection(genre.id)}
+                                            className={`mb-1 flex w-full items-center gap-3 rounded-md p-2 text-left transition ${activeCollection === genre.id ? "bg-white/10 text-white" : "hover:bg-white/5 text-spotify-text"}`}
+                                        >
+                                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded" style={{ background: `linear-gradient(135deg, ${genre.color}, #1f1f1f)` }}>
+                                                <i className={`ph ${genre.icon} text-xl text-white`}></i>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="truncate text-sm font-bold text-white">{genre.name}</div>
+                                                <div className="truncate text-xs text-spotify-text">{genre.type} • {count} pistas</div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    </aside>
+
+                    <main className="content-shell">
+                        <header className="sticky top-0 z-30 flex items-center gap-3 bg-black/40 px-4 py-3 backdrop-blur md:px-6">
+                            <div className="hidden gap-2 md:flex">
+                                <button onClick={prevSong} className="flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black" title="Anterior">
+                                    <i className="ph ph-caret-left"></i>
+                                </button>
+                                <button onClick={nextSong} className="flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black" title="Siguiente">
+                                    <i className="ph ph-caret-right"></i>
+                                </button>
+                            </div>
+                            <div className="relative min-w-0 flex-1 md:max-w-[460px]">
+                                <i className="ph ph-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg text-black"></i>
+                                <input
+                                    id="aipod-search"
+                                    value={searchTerm}
+                                    onChange={(event) => setSearchTerm(event.target.value)}
+                                    placeholder="Que quieres escuchar?"
+                                    className="h-11 w-full rounded-full border-0 bg-white py-2 pl-10 pr-4 text-sm font-semibold text-black outline-none placeholder:text-neutral-500"
+                                />
+                            </div>
+                            <button onClick={() => setShowLyrics((value) => !value)} className={`flex h-10 w-10 items-center justify-center rounded-full transition ${showLyrics ? "bg-spotify-green text-black" : "bg-black/50 text-white hover:bg-black"}`} title="Letras">
                                 <i className="ph-bold ph-microphone-stage text-lg"></i>
                             </button>
-                            
-                            <button className="text-spotify-text hover:text-white transition hidden md:block"><i className="ph ph-list text-lg"></i></button>
-                            <button className="text-spotify-text hover:text-white transition hidden md:block"><i className="ph ph-speaker-high text-lg"></i></button>
-                            
-                            <div className="w-20 hidden md:flex items-center progress-container relative">
-                                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolume} />
-                                <div className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-white group-hover:bg-spotify-green rounded-full pointer-events-none" style={{ width: `${volume * 100}%` }}></div>
+                            <div className="hidden items-center gap-2 rounded-full bg-black px-2 py-1 pr-3 text-sm font-bold lg:flex">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-invictus-gold text-black">A</div>
+                                Apollo
                             </div>
+                        </header>
+
+                        <div className="content-scroll">
+                            <section className="hero-band px-5 pb-7 pt-12 md:px-8 md:pb-9" style={{ "--hero-color": heroColor }}>
+                                <div className="flex flex-col gap-6 md:flex-row md:items-end">
+                                    <img
+                                        src={coverSrc(songData)}
+                                        onError={makeFallback(songData)}
+                                        alt={songData.title}
+                                        className="cover-shadow h-44 w-44 shrink-0 rounded object-cover bg-black md:h-56 md:w-56"
+                                    />
+                                    <div className="min-w-0">
+                                        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-extrabold uppercase text-white/90">
+                                            <span>{collectionDefinition.type}</span>
+                                            <span className="text-white/50">•</span>
+                                            <span>{collectionTracks.length} pistas</span>
+                                            {searchTerm && <span className="rounded-full bg-black/40 px-2 py-1 normal-case text-white">{filteredTracks.length} resultados</span>}
+                                        </div>
+                                        <h1 className="collection-title font-black">{collectionDefinition.name}</h1>
+                                        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm font-semibold text-white/80">
+                                            <span className="font-extrabold text-white">Invictus Records</span>
+                                            <span className="text-white/50">•</span>
+                                            <span>{MASTER_PLAYLIST.length} canciones</span>
+                                            <span className="text-white/50">•</span>
+                                            <span>{GENRE_LIBRARY.length - 1} generos</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="px-5 py-5 md:px-8">
+                                <div className="mb-5 flex flex-wrap items-center gap-3">
+                                    <button onClick={togglePlay} className={`flex h-14 w-14 items-center justify-center rounded-full text-black shadow-lg transition hover:scale-105 ${audioError ? "bg-neutral-600" : "bg-spotify-green"}`} title={isPlaying ? "Pausar" : "Reproducir"}>
+                                        <i className={`ph-fill ${isPlaying ? "ph-pause" : "ph-play"} text-2xl`}></i>
+                                    </button>
+                                    <button onClick={() => toggleLike(songData.id)} className={`flex h-10 w-10 items-center justify-center rounded-full transition ${likedSet.has(songData.id) ? "text-spotify-green" : "text-spotify-text hover:text-white"}`} title="Favorita">
+                                        <i className={`${likedSet.has(songData.id) ? "ph-fill" : "ph"} ph-heart text-3xl`}></i>
+                                    </button>
+                                    <button onClick={() => setIsShuffle((value) => !value)} className={`flex h-10 w-10 items-center justify-center rounded-full transition ${isShuffle ? "text-spotify-green" : "text-spotify-text hover:text-white"}`} title="Aleatorio">
+                                        <i className="ph ph-shuffle text-2xl"></i>
+                                    </button>
+                                    <button onClick={cycleRepeat} className={`relative flex h-10 w-10 items-center justify-center rounded-full transition ${repeatMode !== "off" ? "text-spotify-green" : "text-spotify-text hover:text-white"}`} title="Repetir">
+                                        <i className="ph ph-repeat text-2xl"></i>
+                                        {repeatMode === "one" && <span className="absolute right-1 top-1 text-[10px] font-black">1</span>}
+                                    </button>
+                                </div>
+
+                                {audioError && (
+                                    <div className="mb-5 flex items-start gap-3 rounded-lg border border-red-500/40 bg-red-950/50 p-4 text-sm text-red-100">
+                                        <i className="ph-fill ph-warning-circle mt-0.5 text-2xl text-red-400"></i>
+                                        <div className="min-w-0">
+                                            <div className="font-extrabold">No se pudo abrir esta pista</div>
+                                            <div className="break-all text-red-100/80">{songData.audioUrl}</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-8">
+                                    {topGenres.map((genre) => {
+                                        const count = genreCounts[genre.id] || 0;
+                                        const firstTrack = MASTER_PLAYLIST.find((track) => track.genre === genre.id) || MASTER_PLAYLIST[0];
+                                        return (
+                                            <button
+                                                key={genre.id}
+                                                onClick={() => selectCollection(genre.id)}
+                                                className={`group rounded-lg bg-spotify-elevated p-3 text-left transition hover:bg-spotify-highlight ${activeCollection === genre.id ? "ring-2 ring-spotify-green" : ""}`}
+                                            >
+                                                <div className="relative mb-3 aspect-square overflow-hidden rounded bg-black">
+                                                    <img src={coverSrc(firstTrack)} onError={makeFallback(firstTrack)} alt={genre.name} className="h-full w-full object-cover opacity-85 transition group-hover:scale-105 group-hover:opacity-100" />
+                                                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/50 p-2">
+                                                        <i className={`ph ${genre.icon} text-lg`} style={{ color: genre.color }}></i>
+                                                        <span className="text-xs font-black text-white">{count}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="truncate text-sm font-extrabold text-white">{genre.name}</div>
+                                                <div className="truncate text-xs text-spotify-text">{genre.type}</div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <section>
+                                    <div className="track-grid mb-2 border-b border-white/10 px-3 pb-2 text-xs font-bold uppercase text-spotify-text">
+                                        <span>#</span>
+                                        <span>Titulo</span>
+                                        <span className="track-album">Album</span>
+                                        <span className="track-genre">Genero</span>
+                                        <span className="track-time text-right"><i className="ph ph-clock text-base"></i></span>
+                                    </div>
+
+                                    {filteredTracks.length === 0 ? (
+                                        <div className="rounded-lg bg-white/5 px-5 py-12 text-center">
+                                            <i className="ph ph-magnifying-glass text-4xl text-spotify-text"></i>
+                                            <div className="mt-3 text-lg font-black">Sin resultados</div>
+                                            <div className="mt-1 text-sm text-spotify-text">Prueba con artista, album, genero o titulo.</div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1 pb-8">
+                                            {filteredTracks.map((track, index) => {
+                                                const isCurrent = track.id === songData.id;
+                                                const isLiked = likedSet.has(track.id);
+                                                const genre = GENRE_LIBRARY.find((item) => item.id === track.genre);
+                                                return (
+                                                    <div
+                                                        key={track.id}
+                                                        onClick={() => playTrack(track)}
+                                                        className={`track-grid group rounded-md px-3 py-2.5 text-sm transition hover:bg-white/10 ${isCurrent ? "bg-white/10" : ""}`}
+                                                    >
+                                                        <div className="flex h-9 items-center justify-center text-spotify-text">
+                                                            {isCurrent && isPlaying ? (
+                                                                <img src="https://open.spotifycdn.com/cdn/images/equaliser-animated-green.f93a2ef4.gif" alt="" className="h-4 w-4" />
+                                                            ) : (
+                                                                <>
+                                                                    <span className={`group-hover:hidden ${isCurrent ? "text-spotify-green" : ""}`}>{index + 1}</span>
+                                                                    <i className="ph-fill ph-play hidden text-white group-hover:block"></i>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex min-w-0 items-center gap-3">
+                                                            <img src={coverSrc(track)} onError={makeFallback(track)} alt={track.title} className="h-10 w-10 shrink-0 rounded object-cover bg-black" />
+                                                            <div className="min-w-0">
+                                                                <div className={`truncate font-bold ${isCurrent ? "text-spotify-green" : "text-white"}`}>{track.title}</div>
+                                                                <div className="truncate text-xs text-spotify-text">{track.artist}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="track-album truncate text-spotify-text">{track.album}</div>
+                                                        <div className="track-genre flex min-w-0 items-center gap-2 text-spotify-text">
+                                                            <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: genre?.color || "#1db954" }}></span>
+                                                            <span className="truncate">{genre?.name || track.genre}</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-end gap-3 text-spotify-text">
+                                                            <button
+                                                                onClick={(event) => {
+                                                                    event.stopPropagation();
+                                                                    toggleLike(track.id);
+                                                                }}
+                                                                className={`hidden h-8 w-8 items-center justify-center rounded-full transition group-hover:flex ${isLiked ? "text-spotify-green" : "hover:text-white"}`}
+                                                                title="Favorita"
+                                                            >
+                                                                <i className={`${isLiked ? "ph-fill" : "ph"} ph-heart text-lg`}></i>
+                                                            </button>
+                                                            <span className="track-time w-11 text-right text-xs">{displayTrackTime(track)}</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </section>
+                            </section>
+                        </div>
+
+                        {showLyrics && (
+                            <section className="absolute inset-0 z-40 overflow-y-auto px-6 py-20 md:px-12" style={{ background: `linear-gradient(180deg, ${songData.color}, #121212 72%)` }}>
+                                <button onClick={() => setShowLyrics(false)} className="fixed right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black" title="Cerrar">
+                                    <i className="ph ph-x text-xl"></i>
+                                </button>
+                                <div className="mx-auto max-w-4xl pb-24">
+                                    <div className="mb-8 flex items-center gap-4">
+                                        <img src={coverSrc(songData)} onError={makeFallback(songData)} alt={songData.title} className="h-20 w-20 rounded object-cover shadow-xl" />
+                                        <div className="min-w-0">
+                                            <div className="truncate text-2xl font-black">{songData.title}</div>
+                                            <div className="truncate text-sm font-semibold text-white/70">{songData.artist}</div>
+                                        </div>
+                                    </div>
+                                    {isLoadingLyrics ? (
+                                        <div className="flex h-52 items-center justify-center text-white/70">
+                                            <i className="ph ph-circle-notch animate-spin text-4xl"></i>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            {parsedLyrics.map((line, index) => (
+                                                <article key={`${line.type}-${index}`} className="mb-8">
+                                                    <div className="mb-2 text-xs font-black uppercase text-white/50">{line.type}</div>
+                                                    <p className="whitespace-pre-wrap text-3xl font-black leading-tight text-white/80 md:text-5xl">{line.text}</p>
+                                                </article>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        )}
+                    </main>
+
+                    <aside className="detail-rail">
+                        <div className="flex items-center justify-between px-5 py-4">
+                            <div className="min-w-0">
+                                <div className="truncate text-base font-black">{songData.title}</div>
+                                <div className="truncate text-xs font-semibold text-spotify-text">{songData.artist}</div>
+                            </div>
+                            <button onClick={() => toggleLike(songData.id)} className={`flex h-9 w-9 items-center justify-center rounded-full ${likedSet.has(songData.id) ? "text-spotify-green" : "text-spotify-text hover:text-white"}`} title="Favorita">
+                                <i className={`${likedSet.has(songData.id) ? "ph-fill" : "ph"} ph-heart text-xl`}></i>
+                            </button>
+                        </div>
+                        <div className="px-5">
+                            <img src={coverSrc(songData)} onError={makeFallback(songData)} alt={songData.title} className="cover-shadow aspect-square w-full rounded-lg object-cover bg-black" />
+                        </div>
+                        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 pt-5">
+                            <div className="mb-5 rounded-lg bg-white/5 p-4">
+                                <div className="mb-3 text-sm font-black">Ahora suena</div>
+                                <div className="flex items-center justify-between gap-4 text-sm">
+                                    <span className="text-spotify-text">Genero</span>
+                                    <span className="truncate font-bold text-white">{currentGenre?.name}</span>
+                                </div>
+                                <div className="mt-2 flex items-center justify-between gap-4 text-sm">
+                                    <span className="text-spotify-text">Album</span>
+                                    <span className="truncate font-bold text-white">{songData.album}</span>
+                                </div>
+                                <div className="mt-2 flex items-center justify-between gap-4 text-sm">
+                                    <span className="text-spotify-text">Archivo</span>
+                                    <span className="truncate font-bold text-white">{getFileType(songData)}</span>
+                                </div>
+                            </div>
+
+                            <div className="mb-4 flex items-center justify-between">
+                                <div className="text-sm font-black">Cola</div>
+                                <div className="text-xs font-bold text-spotify-text">{playbackQueue.length} pistas</div>
+                            </div>
+                            <div className="space-y-2">
+                                {visibleQueue.map((track) => (
+                                    <button key={track.id} onClick={() => playTrack(track)} className="flex w-full items-center gap-3 rounded-md p-2 text-left transition hover:bg-white/10">
+                                        <img src={coverSrc(track)} onError={makeFallback(track)} alt={track.title} className="h-11 w-11 rounded object-cover bg-black" />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate text-sm font-bold text-white">{track.title}</div>
+                                            <div className="truncate text-xs text-spotify-text">{track.artist}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="mt-6">
+                                <div className="mb-4 flex items-center justify-between">
+                                    <div className="text-sm font-black">Letras</div>
+                                    <button onClick={() => setShowLyrics(true)} className="text-xs font-black text-spotify-green hover:underline">Abrir</button>
+                                </div>
+                                <div className="max-h-56 overflow-hidden rounded-lg bg-white/5 p-4">
+                                    {isLoadingLyrics ? (
+                                        <div className="flex h-24 items-center justify-center text-spotify-text">
+                                            <i className="ph ph-circle-notch animate-spin text-2xl"></i>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {parsedLyrics.slice(0, 3).map((line, index) => (
+                                                <div key={index}>
+                                                    <div className="text-[11px] font-black uppercase text-spotify-muted">{line.type}</div>
+                                                    <p className="line-clamp-2 whitespace-pre-wrap text-sm font-bold leading-snug text-white/80">{line.text}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <footer className="player-bar">
+                        <div className="player-track flex min-w-0 items-center gap-3">
+                            <img src={coverSrc(songData)} onError={makeFallback(songData)} alt={songData.title} className="h-14 w-14 shrink-0 rounded object-cover bg-black" />
+                            <div className="min-w-0">
+                                <div className="truncate text-sm font-bold text-white">{songData.title}</div>
+                                <div className="truncate text-xs font-semibold text-spotify-text">{songData.artist}</div>
+                            </div>
+                            <button onClick={() => toggleLike(songData.id)} className={`ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition ${likedSet.has(songData.id) ? "text-spotify-green" : "text-spotify-text hover:text-white"}`} title="Favorita">
+                                <i className={`${likedSet.has(songData.id) ? "ph-fill" : "ph"} ph-heart text-lg`}></i>
+                            </button>
+                        </div>
+
+                        <div className="player-main flex min-w-0 flex-col items-center">
+                            <div className="mb-2 flex items-center gap-4">
+                                <button onClick={() => setIsShuffle((value) => !value)} className={`${isShuffle ? "text-spotify-green" : "text-spotify-text hover:text-white"} transition`} title="Aleatorio">
+                                    <i className="ph ph-shuffle text-xl"></i>
+                                </button>
+                                <button onClick={prevSong} className="text-spotify-text transition hover:text-white" title="Anterior">
+                                    <i className="ph-fill ph-skip-back text-xl"></i>
+                                </button>
+                                <button onClick={togglePlay} className={`flex h-9 w-9 items-center justify-center rounded-full text-black transition hover:scale-105 ${audioError ? "bg-neutral-500" : "bg-white"}`} title={isPlaying ? "Pausar" : "Reproducir"}>
+                                    <i className={`ph-fill ${isPlaying ? "ph-pause" : "ph-play"} text-lg`}></i>
+                                </button>
+                                <button onClick={nextSong} className="text-spotify-text transition hover:text-white" title="Siguiente">
+                                    <i className="ph-fill ph-skip-forward text-xl"></i>
+                                </button>
+                                <button onClick={cycleRepeat} className={`${repeatMode !== "off" ? "text-spotify-green" : "text-spotify-text hover:text-white"} relative transition`} title="Repetir">
+                                    <i className="ph ph-repeat text-xl"></i>
+                                    {repeatMode === "one" && <span className="absolute -right-1 -top-1 text-[10px] font-black">1</span>}
+                                </button>
+                            </div>
+                            <div className="flex w-full max-w-[720px] items-center gap-2 text-xs font-mono text-spotify-text">
+                                <span className="w-10 text-right">{formatTime(currentTime)}</span>
+                                <input
+                                    className="range"
+                                    style={{ "--value": `${progressValue}%` }}
+                                    type="range"
+                                    min="0"
+                                    max={duration || 100}
+                                    value={currentTime}
+                                    onChange={(event) => {
+                                        const nextTime = Number(event.target.value);
+                                        if (audioRef.current) audioRef.current.currentTime = nextTime;
+                                        setCurrentTime(nextTime);
+                                    }}
+                                    disabled={audioError}
+                                    aria-label="Progreso"
+                                />
+                                <span className="w-10">{formatTime(duration)}</span>
+                            </div>
+                        </div>
+
+                        <div className="player-side-controls flex items-center justify-end gap-3">
+                            <button onClick={() => setShowLyrics((value) => !value)} className={`${showLyrics ? "text-spotify-green" : "text-spotify-text hover:text-white"} transition`} title="Letras">
+                                <i className="ph-bold ph-microphone-stage text-xl"></i>
+                            </button>
+                            <button className="text-spotify-text transition hover:text-white" title="Cola">
+                                <i className="ph ph-list-bullets text-xl"></i>
+                            </button>
+                            <button onClick={() => setMuted((value) => !value)} className="text-spotify-text transition hover:text-white" title={muted ? "Activar sonido" : "Silenciar"}>
+                                <i className={`ph ${muted || volume === 0 ? "ph-speaker-slash" : volume > 0.55 ? "ph-speaker-high" : "ph-speaker-low"} text-xl`}></i>
+                            </button>
+                            <input
+                                className="range w-28"
+                                style={{ "--value": `${volumeValue}%` }}
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                value={muted ? 0 : volume}
+                                onChange={(event) => {
+                                    const nextVolume = Number(event.target.value);
+                                    setVolume(nextVolume);
+                                    setMuted(nextVolume === 0);
+                                }}
+                                aria-label="Volumen"
+                            />
                         </div>
                     </footer>
                 </div>
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        ReactDOM.createRoot(document.getElementById("root")).render(<App />);
     </script>
 </body>
 </html>
