@@ -1,0 +1,19 @@
+{
+  "name": "aiPod 432Hz",
+  "short_name": "aiPod",
+  "description": "Reproductor musical estilo Spotify con biblioteca por generos, letras y resonancia 432 Hz.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1db954",
+  "lang": "es-CR",
+  "icons": [
+    {
+      "src": "/images/favicon.png",
+      "sizes": "2000x2000",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
