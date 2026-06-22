@@ -1,0 +1,14 @@
+{
+  "name": "aipod-432hz",
+  "version": "1.0.0",
+  "private": true,
+  "description": "aiPod 432Hz static music player with Vercel PayPal checkout functions.",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
